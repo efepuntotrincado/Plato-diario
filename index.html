@@ -1,0 +1,1398 @@
+<!doctype html>
+<html lang="es-CL">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Plato Diario</title>
+<meta name="description" content="Registro diario de comidas, calorías y proteína, con balance según las Guías Alimentarias chilenas.">
+<meta name="theme-color" content="#f2f5ef" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e1310" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Plato Diario">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+html{-webkit-tap-highlight-color:transparent}
+body{margin:0}
+:root{padding-top:env(safe-area-inset-top,0px)}
+img{max-width:100%}
+
+/* Layout: una columna tipo libreta de feria, angosta (máx 560px), anillo de calorías arriba, comidas por tiempo chileno, barra de pestañas fija abajo */
+:root{
+  --bg:#f2f5ef; --surface:#ffffff; --surface-2:#e6ece2; --ink:#17201a; --muted:#566659; --line:#d3dccf;
+  --accent:#1d6b47; --accent-ink:#ffffff; --accent-soft:#d7eadf;
+  --prot:#a8345b; --carb:#b07a12; --fat:#5f7d17; --veg:#21804f; --fruit:#cc6a12; --water:#256fa6; --dairy:#6a5aa8;
+  --ok:#21804f; --warn:#a5560f; --bad:#b3261e;
+  --display:"Bricolage Grotesque","Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1310; --surface:#161f19; --surface-2:#1e2a22; --ink:#e4ece5; --muted:#97a99b; --line:#2b3a30;
+  --accent:#4cc388; --accent-ink:#04200f; --accent-soft:#183a28;
+  --prot:#e47b9e; --carb:#e2b04a; --fat:#a8c449; --veg:#5ccc8b; --fruit:#f19a48; --water:#5eaee6; --dairy:#a99bec;
+  --ok:#5ccc8b; --warn:#eaa25a; --bad:#f08a80; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1310; --surface:#161f19; --surface-2:#1e2a22; --ink:#e4ece5; --muted:#97a99b; --line:#2b3a30;
+  --accent:#4cc388; --accent-ink:#04200f; --accent-soft:#183a28;
+  --prot:#e47b9e; --carb:#e2b04a; --fat:#a8c449; --veg:#5ccc8b; --fruit:#f19a48; --water:#5eaee6; --dairy:#a99bec;
+  --ok:#5ccc8b; --warn:#eaa25a; --bad:#f08a80; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px calc(96px + env(safe-area-inset-bottom,0px))}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:1.6rem;font-weight:800}
+h2{font-size:1.15rem;font-weight:700}
+h3{font-size:1rem;font-weight:700}
+p{margin:0}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.small{font-size:.86rem}
+.label{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
+.stack{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.between{justify-content:space-between}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+.sec{display:flex;flex-direction:column;gap:10px;min-width:0}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:8px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 16px;border-radius:999px;font-weight:700;background:var(--surface-2);color:var(--ink)}
+.btn.pri{background:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:transparent;border:1px solid var(--line)}
+.btn.sm{min-height:34px;padding:0 12px;font-size:.88rem}
+.btn.danger{background:transparent;border:1px solid var(--bad);color:var(--bad)}
+.btn:disabled{opacity:.5;cursor:default}
+.iconbtn{width:40px;height:40px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:var(--surface-2);font-size:1.15rem;font-weight:700;flex:none}
+input[type=text],input[type=number],input[type=password],input[type=date],select,textarea{width:100%;min-height:44px;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:10px 12px}
+textarea{resize:vertical;min-height:84px}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label{font-size:.86rem;color:var(--muted);font-weight:700}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media (max-width:380px){.grid2{grid-template-columns:1fr}}
+
+/* encabezado */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:8px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.brand{display:flex;align-items:baseline;gap:8px}
+.brand .dot{width:12px;height:12px;border-radius:50%;background:var(--accent);display:inline-block;transform:translateY(-2px)}
+.sync{font-size:.74rem;color:var(--muted);text-align:right;max-width:46%}
+.brand h1{white-space:nowrap}
+.daynav{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.daynav .d{font-family:var(--display);font-weight:700;font-size:1.05rem;text-align:center;flex:1}
+
+/* anillo */
+.hero{display:grid;grid-template-columns:150px 1fr;gap:16px;align-items:center}
+@media (max-width:380px){.hero{grid-template-columns:1fr;justify-items:center}}
+.ring{position:relative;width:150px;height:150px}
+.ring svg{width:150px;height:150px;transform:rotate(-90deg)}
+.ring .c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.ring .big{font-family:var(--display);font-size:2rem;font-weight:800;line-height:1}
+.macros{display:flex;flex-direction:column;gap:10px;width:100%;min-width:0}
+.bar{display:flex;flex-direction:column;gap:3px}
+.bar .t{display:flex;justify-content:space-between;font-size:.88rem;gap:8px}
+.bar .t span{white-space:nowrap}
+.bar .t b{font-weight:700}
+.track{height:9px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.fill{height:100%;border-radius:99px;width:0;transition:width .4s ease}
+@media (prefers-reduced-motion:reduce){.fill{transition:none}}
+
+/* chips de balance */
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;font-size:.84rem;font-weight:700;background:var(--surface-2);color:var(--ink);border:1px solid transparent}
+.chip.ok{background:var(--accent-soft);color:var(--ok)}
+.chip .pip{width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.8}
+.chip.btnchip{border-color:var(--line);background:var(--surface)}
+
+/* registro */
+.composer textarea{border-width:2px}
+.composer textarea:focus{border-color:var(--accent)}
+.examples{display:flex;gap:6px;flex-wrap:wrap}
+.preview{border:2px dashed var(--accent);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:10px;background:var(--surface)}
+.pitem{display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:center;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.pitem:last-of-type{border-bottom:0;padding-bottom:0}
+.pitem .nm{font-weight:700;min-width:0}
+.stepper{display:flex;align-items:center;gap:4px}
+.stepper button{width:32px;height:32px;border-radius:999px;background:var(--surface-2);font-weight:800}
+.stepper span{min-width:44px;text-align:center;font-weight:700}
+.macline{font-size:.82rem;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap}
+.macline .p{color:var(--prot);font-weight:700}
+.macline .v{color:var(--veg);font-weight:700}
+.macline .f{color:var(--fruit);font-weight:700}
+
+/* comidas */
+.meal{display:flex;flex-direction:column;gap:2px}
+.meal-h{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;border-bottom:2px solid var(--ink)}
+.entry{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:10px 0;border-bottom:1px solid var(--line);text-align:left;width:100%}
+.entry .nm{font-weight:700;min-width:0;overflow-wrap:anywhere}
+.entry .k{font-weight:700;text-align:right}
+.empty{padding:14px;border:1px dashed var(--line);border-radius:12px;color:var(--muted);font-size:.92rem}
+.water{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.glasses{display:flex;gap:4px;flex-wrap:wrap}
+.glass{width:20px;height:26px;border:2px solid var(--water);border-top-width:1px;border-radius:2px 2px 6px 6px;position:relative;overflow:hidden}
+.glass.on::after{content:"";position:absolute;inset:30% 0 0;background:var(--water);opacity:.75}
+
+/* faltante */
+.gap{display:flex;flex-direction:column;gap:8px}
+.sug{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;padding:10px;border-radius:12px;background:var(--surface-2)}
+.idea{padding:12px;border-radius:12px;border:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
+
+/* historial */
+.chart{width:100%;overflow-x:auto}
+.chart svg{display:block;width:100%;height:auto}
+.dayrow{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:10px 0;border-bottom:1px solid var(--line);width:100%;text-align:left}
+.stat{display:flex;flex-direction:column;gap:2px;padding:10px;border-radius:12px;background:var(--surface-2)}
+.stat .v{font-family:var(--display);font-weight:800;font-size:1.35rem}
+
+/* alimentos */
+.food{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:10px 0;border-bottom:1px solid var(--line);align-items:center}
+.tag{font-size:.7rem;font-weight:700;padding:2px 7px;border-radius:99px;background:var(--surface-2);color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+
+/* pestañas */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:8;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+.tabs .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+.tabs button{min-height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:.78rem;font-weight:700;color:var(--muted)}
+.tabs button[aria-current="page"]{color:var(--accent)}
+.tabs svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* hojas y bloqueo */
+.sheet-bg{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);width:100%;max-width:560px;border-radius:18px 18px 0 0;padding:18px max(16px,env(safe-area-inset-right,0px)) calc(18px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));max-height:88vh;overflow:auto;display:flex;flex-direction:column;gap:12px}
+.lock{position:fixed;inset:0;z-index:30;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px))}
+.lock .box{width:100%;max-width:340px;display:flex;flex-direction:column;gap:14px;text-align:center}
+.pinput{font-size:1.6rem!important;text-align:center;letter-spacing:.5em;font-variant-numeric:tabular-nums}
+.toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:700;font-size:.9rem;z-index:40;max-width:calc(100% - 32px);text-align:center}
+.err{color:var(--bad);font-weight:700;font-size:.9rem}
+.note{font-size:.84rem;color:var(--muted);border-left:3px solid var(--line);padding-left:10px}
+details summary{cursor:pointer;font-weight:700}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spinner{animation:none}}
+.photo-label{position:relative;overflow:hidden}
+.photo-label input{position:absolute;inset:0;opacity:0;cursor:pointer}
+
+/* agregados v2 */
+.install{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:var(--r);background:var(--accent-soft);color:var(--ink);font-size:.9rem}
+.install b{color:var(--accent)}
+.install button{margin-left:auto;flex:none}
+.unk{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chip.warn{background:transparent;border:1px dashed var(--warn);color:var(--warn)}
+.plan{display:flex;flex-direction:column;gap:8px}
+.opt{padding:12px;border-radius:12px;background:var(--surface-2);display:flex;flex-direction:column;gap:6px}
+.opt ul{margin:0;padding-left:18px;font-size:.92rem}
+.opt li{margin:1px 0}
+.tip{font-size:.9rem;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface)}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{min-height:34px;padding:0 12px;border-radius:999px;border:1px solid var(--line);font-weight:700;font-size:.86rem}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.update{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 8px);transform:translateX(-50%);z-index:45;background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:10px 16px;font-weight:700;box-shadow:0 4px 18px rgba(0,0,0,.2)}
+.linkbtn{color:var(--accent);font-weight:700;text-decoration:underline;padding:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><span class="dot" aria-hidden="true"></span><h1>Plato Diario</h1></div>
+    <div class="sync" id="hello"></div>
+  </header>
+
+  <!-- PRIMER USO -->
+  <section id="vSetup" class="stack" hidden>
+    <div class="card stack">
+      <h2>Armemos tu meta</h2>
+      <p class="muted small">Cada teléfono guarda su propio registro. Con estos datos calculo tu gasto diario con la ecuación de Mifflin-St Jeor y le sumo o resto según tu objetivo. Todo se puede cambiar después en Ajustes.</p>
+      <div class="field"><label for="sNombre">Tu nombre</label><input id="sNombre" type="text" autocomplete="given-name" placeholder="Ej. Felipe"></div>
+      <div id="setupForm"></div>
+      <div class="grid2">
+        <div class="field"><label for="sPin">Crea un PIN (4 a 8 dígitos)</label><input id="sPin" type="password" inputmode="numeric" autocomplete="new-password" maxlength="8"></div>
+        <div class="field"><label for="sPin2">Repite el PIN</label><input id="sPin2" type="password" inputmode="numeric" autocomplete="new-password" maxlength="8"></div>
+      </div>
+      <p id="setupErr" class="err" hidden></p>
+      <button class="btn pri" id="setupGo">Empezar a registrar</button>
+      <label class="btn ghost photo-label">Ya tengo un respaldo<input type="file" id="setupBk" accept="application/json,.json"></label>
+      <div id="setupBkBox"></div>
+    </div>
+  </section>
+
+  <!-- HOY -->
+  <section id="vHoy" class="stack" hidden>
+    <div class="install" id="installTip" hidden>
+      <div>Para instalarla, toca <b>Compartir</b> en Safari y luego <b>Añadir a pantalla de inicio</b>. Así se abre como app y funciona sin internet.</div>
+      <button class="iconbtn" id="installX" aria-label="Cerrar aviso">×</button>
+    </div>
+    <div class="daynav">
+      <button class="iconbtn" id="dPrev" aria-label="Día anterior">‹</button>
+      <div class="d" id="dLbl"></div>
+      <button class="iconbtn" id="dNext" aria-label="Día siguiente">›</button>
+    </div>
+
+    <div class="card">
+      <div class="hero">
+        <div class="ring" id="ring"></div>
+        <div class="macros" id="macros"></div>
+      </div>
+    </div>
+
+    <div class="chips" id="balance" aria-label="Balance del día"></div>
+
+    <div class="card stack composer">
+      <div class="row between">
+        <h2>¿Qué comiste?</h2>
+        <select id="mealSel" aria-label="Tiempo de comida" style="width:auto;min-height:36px;padding:4px 10px"></select>
+      </div>
+      <textarea id="inTxt" placeholder="Ej. 2 huevos revueltos en agua y un pan ciabatta con palta" autocapitalize="sentences"></textarea>
+      <div class="row">
+        <button class="btn pri" id="btnParse">Calcular</button>
+        <button class="btn ghost" id="btnManual">A mano</button>
+      </div>
+      <div class="examples" id="recents"></div>
+      <div id="preview"></div>
+    </div>
+
+    <div class="card gap" id="gapCard"></div>
+
+    <div class="card stack">
+      <div class="row between"><h2>Agua</h2><span class="small muted num" id="aguaLbl"></span></div>
+      <div class="water">
+        <button class="iconbtn" id="aMinus" aria-label="Quitar un vaso">−</button>
+        <div class="glasses" id="glasses"></div>
+        <button class="iconbtn" id="aPlus" aria-label="Sumar un vaso">+</button>
+      </div>
+    </div>
+
+    <div class="stack" id="meals"></div>
+  </section>
+
+  <!-- HISTORIAL -->
+  <section id="vHist" class="stack" hidden>
+    <div class="card stack">
+      <div class="row between"><h2>Últimos 14 días</h2><span class="small muted">calorías vs meta</span></div>
+      <div class="chart" id="histChart"></div>
+    </div>
+    <div class="grid2" id="weekStats"></div>
+    <div class="card stack">
+      <div class="row between"><h2>Peso</h2><span class="small muted" id="pesoLbl"></span></div>
+      <div class="chart" id="pesoChart"></div>
+      <div class="row" style="flex-wrap:nowrap">
+        <input id="pesoIn" type="number" inputmode="decimal" step="0.1" min="30" max="250" placeholder="kg de hoy" aria-label="Peso de hoy en kilos">
+        <button class="btn pri" id="pesoGo">Registrar</button>
+      </div>
+      <p class="note">Tu peso más reciente reemplaza el del perfil y la meta se recalcula sola.</p>
+    </div>
+    <div class="card">
+      <h2 style="margin-bottom:6px">Días</h2>
+      <div id="dayList"></div>
+    </div>
+  </section>
+
+  <!-- ALIMENTOS -->
+  <section id="vAlim" class="stack" hidden>
+    <div class="card stack">
+      <h2>Alimentos</h2>
+      <p class="small muted">Porciones típicas chilenas. Lo que agregas a mano o corriges queda como tuyo y la app lo reconoce la próxima vez que lo escribas.</p>
+      <input id="fSearch" type="text" placeholder="Buscar: marraqueta, pechuga, brócoli…" aria-label="Buscar alimento">
+      <div class="seg" id="fFilter">
+        <button data-f="all" aria-pressed="true">Todos</button><button data-f="mio" aria-pressed="false">Míos</button><button data-f="learn" aria-pressed="false">Palabras aprendidas</button>
+      </div>
+      <div id="foodList"></div>
+    </div>
+  </section>
+
+  <!-- AJUSTES -->
+  <section id="vAjus" class="stack" hidden>
+    <div class="card stack">
+      <h2>Perfil y meta</h2>
+      <div class="field"><label for="aNombre">Nombre</label><input id="aNombre" type="text"></div>
+      <div id="perfForm"></div>
+      <div id="metaBox" class="stack"></div>
+      <button class="btn pri" id="perfSave">Guardar perfil</button>
+    </div>
+    <div class="card stack">
+      <h2>PIN</h2>
+      <div class="grid2">
+        <div class="field"><label for="pOld">PIN actual</label><input id="pOld" type="password" inputmode="numeric" maxlength="8"></div>
+        <div class="field"><label for="pNew">PIN nuevo</label><input id="pNew" type="password" inputmode="numeric" maxlength="8"></div>
+      </div>
+      <button class="btn" id="pinSave">Cambiar PIN</button>
+      <p id="pinMsg" class="small" hidden></p>
+    </div>
+    <div class="card stack">
+      <h2>Respaldo</h2>
+      <p class="small muted">Tus datos viven solo en este teléfono. Haz un respaldo cada cierto tiempo y guárdalo en Archivos o mándatelo por AirDrop o WhatsApp.</p>
+      <div class="row">
+        <button class="btn" id="bkOut">Guardar respaldo</button>
+        <label class="btn ghost photo-label">Restaurar respaldo<input type="file" id="bkIn" accept="application/json,.json"></label>
+      </div>
+      <p class="small muted" id="bkLast"></p>
+      <div id="bkBox"></div>
+    </div>
+    <div class="card stack">
+      <h2>Instalar en otro iPhone</h2>
+      <ol class="small" style="margin:0;padding-left:20px">
+        <li>Abre en Safari la dirección <b id="appUrl"></b></li>
+        <li>Toca Compartir y luego "Añadir a pantalla de inicio".</li>
+        <li>Ábrela desde el ícono y crea el perfil y el PIN de esa persona.</li>
+      </ol>
+      <p class="small muted">Cada teléfono lleva su propio registro y su propio PIN.</p>
+    </div>
+    <div class="card stack">
+      <h2>De dónde salen las metas</h2>
+      <div class="small stack">
+        <p><b>Calorías.</b> Gasto en reposo por Mifflin-St Jeor por el factor de actividad. Para subir de peso se suman entre 250 y 500 kcal y para bajar se restan.</p>
+        <p><b>Proteína.</b> 1,6 a 2,2 g por kilo de peso al día cuando la idea es ganar masa. Por defecto uso 1,8 g/kg.</p>
+        <p><b>Grasas y carbohidratos.</b> Grasas al 28% de las calorías y el resto, carbohidratos.</p>
+        <p><b>Balance.</b> Guías Alimentarias para la Población Chilena (Ministerio de Salud, 2013): 5 porciones de verduras y frutas de distintos colores cada día, 3 porciones de lácteos bajos en grasa, legumbres al menos 2 veces por semana, pescado al menos 2 veces por semana y 6 a 8 vasos de agua.</p>
+        <p><b>Fibra.</b> 14 g por cada 1.000 kcal, con un mínimo de 25 g.</p>
+        <p><b>Etiquetas.</b> Para productos envasados, revisa la tabla nutricional que exige el Reglamento Sanitario de los Alimentos (DS 977/96) y los sellos "ALTO EN" de la Ley 20.606 y su reglamento (DS 13/2015). Entre dos productos parecidos, prefiere el que tiene menos sellos.</p>
+        <p><b>Cómo calcula.</b> Todo se calcula dentro del teléfono, sin internet. Los valores son aproximados por porción típica y sirven para orientarte. No reemplazan la indicación de un nutricionista.</p>
+      </div>
+    </div>
+    <div class="card stack">
+      <h2>Borrar todo</h2>
+      <div id="wipeBox"><button class="btn danger" id="wipe1">Borrar todos mis datos</button></div>
+      <p class="small muted" id="verLbl"></p>
+    </div>
+  </section>
+</div>
+
+<nav class="tabs" aria-label="Secciones">
+  <div class="in">
+    <button data-tab="hoy" aria-current="page"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>Hoy</button>
+    <button data-tab="hist"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Historial</button>
+    <button data-tab="alim"><svg viewBox="0 0 24 24"><path d="M3 11h18a9 9 0 0 1-18 0zM12 3c0 3 3 3 3 6M8 5c0 2 2 2 2 4"/></svg>Alimentos</button>
+    <button data-tab="ajus"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg>Ajustes</button>
+  </div>
+</nav>
+
+<div id="lock" class="lock" hidden>
+  <div class="box">
+    <div class="brand" style="justify-content:center"><span class="dot" aria-hidden="true"></span><h1>Plato Diario</h1></div>
+    <p class="muted" id="lockHello">Ingresa tu PIN</p>
+    <input id="lockIn" class="pinput" type="password" inputmode="numeric" autocomplete="current-password" maxlength="8" aria-label="PIN">
+    <button class="btn pri" id="lockGo">Entrar</button>
+    <p id="lockErr" class="err" hidden>PIN incorrecto</p>
+    <button class="linkbtn" id="lockForgot">Olvidé mi PIN</button>
+    <div id="forgotBox"></div>
+  </div>
+</div>
+
+<div id="sheetHost"></div>
+<div id="toastHost"></div>
+<div id="updHost"></div>
+<script>
+"use strict";
+/* Base de alimentos: nombre | alias | porción | gramos | kcal | prot | carb | grasa | fibra | verduras | frutas | lácteos | flags
+   Valores aproximados por porción típica chilena. flags: leg, pes, fry, cnt4, <medida><factor> */
+const BASE_TXT=`
+Huevo (revuelto en agua, duro o a la copa)|huevo,huevos,huevo revuelto,huevos revueltos,huevo duro,huevos duros,huevo a la copa,huevo pochado,huevo de campo,huevos de campo|1 unidad (50 g)|50|72|6.3|0.4|4.8|0|0|0|0|sP
+Huevo frito|huevo frito,huevos fritos,huevo revuelto con aceite|1 unidad con aceite|55|110|6.3|0.4|9|0|0|0|0|
+Clara de huevo|clara,claras,clara de huevo|1 clara|33|17|3.6|0.2|0|0|0|0|0|
+Leche descremada|leche,leche descremada|1 taza (200 ml)|200|70|6.8|10|0.2|0|0|0|1|vaso1
+Leche semidescremada|leche semidescremada|1 taza (200 ml)|200|92|6.6|9.8|3|0|0|0|1|vaso1
+Leche entera|leche entera|1 taza (200 ml)|200|124|6.4|9.6|6.6|0|0|0|1|vaso1
+Leche chocolatada|leche chocolatada,leche con chocolate|1 caja (200 ml)|200|150|6|22|4|0.5|0|0|1|
+Yogur natural|yogur,yogurt,yoghurt,yogur natural|1 unidad (125 g)|125|80|4.5|6|4|0|0|0|1|
+Yogur proteico|yogur proteico,yogurt proteico,yogur protein,yogurt protein,protein yogurt|1 unidad (155 g)|155|100|15|9|0.3|0|0|0|1|sP
+Quesillo|quesillo|1 trozo (50 g)|50|85|8|1.5|5.5|0|0|0|1|lamina0.5
+Queso fresco|queso fresco|1 trozo (50 g)|50|110|9|1.5|7.5|0|0|0|1|
+Queso laminado (gauda o mantecoso)|queso,queso gauda,queso mantecoso,queso laminado,lamina de queso|1 lámina (20 g)|20|70|5|0.3|5.4|0|0|0|0.5|
+Queso cottage|cottage,queso cottage|1/2 taza (110 g)|110|100|12|3.5|4.5|0|0|0|1|sP
+Mantequilla|mantequilla,margarina|1 cucharadita (5 g)|5|36|0|0|4|0|0|0|0|cda3,cucharada3
+Marraqueta|marraqueta,pan batido,pan frances,pan,pancito|1 unidad (100 g)|100|270|8.5|56|1.5|2.5|0|0|0|sC
+Hallulla|hallulla,dobladita|1 unidad (80 g)|80|245|6.4|42|5.5|1.8|0|0|0|
+Pan ciabatta|ciabatta,pan ciabatta,chapata|1 unidad (80 g)|80|215|7.5|40|2.5|1.8|0|0|0|
+Pan de molde integral|pan integral,pan de molde integral,pan molde integral,rebanada integral|1 rebanada (30 g)|30|75|3.5|12.5|1|2|0|0|0|
+Pan de molde blanco|pan de molde,pan molde,rebanada de pan|1 rebanada (25 g)|25|67|2.2|12.5|0.9|0.6|0|0|0|
+Pan pita|pan pita,pita|1 unidad (60 g)|60|165|5.5|33|0.7|1.3|0|0|0|
+Tortilla de trigo|tortilla de trigo,wrap,tortilla mexicana,tortilla|1 unidad (40 g)|40|120|3.3|20|3|1.2|0|0|0|
+Avena|avena|1/2 taza (40 g)|40|150|5.3|27|2.6|4|0|0|0|sC,taza2
+Granola|granola|1/2 taza (50 g)|50|230|5.5|32|9|3.5|0|0|0|taza2
+Cereal de desayuno|cereal,cereales,corn flakes,chocapic|1 taza (30 g)|30|115|2|25|0.8|1|0|0|0|
+Galletas de agua|galletas de agua,galleta de agua,galletas soda|4 unidades (25 g)|25|110|2.5|17|3.5|0.8|0|0|0|
+Galletas dulces|galleta,galletas,galletas dulces,triton,oreo|3 unidades (30 g)|30|145|1.8|21|6|0.6|0|0|0|
+Arroz blanco|arroz,arroz blanco,arroz graneado|1 taza cocida (160 g)|160|205|4.2|45|0.4|0.6|0|0|0|sC,plato1.5
+Arroz integral|arroz integral|1 taza cocida (195 g)|195|218|4.5|46|1.6|3.5|0|0|0|plato1.5
+Fideos|fideos,tallarines,tallarin,pasta,spaghetti,espagueti,espirales,corbatas|1 taza cocida (140 g)|140|220|8|43|1.3|2.5|0|0|0|sC,plato1.5
+Quínoa|quinoa|1 taza cocida (185 g)|185|222|8|39|3.6|5|0|0|0|sC,plato1.5
+Papa cocida|papa,papas,papa cocida,papas cocidas,papa al horno,papas al horno|1 unidad mediana (150 g)|150|116|2.5|26|0.2|2.7|0|0|0|sC
+Puré de papas|pure,pure de papas|1 taza (210 g)|210|215|4|35|7|3|0|0|0|plato1.5
+Papas fritas|papas fritas,papitas fritas|1 porción mediana (120 g)|120|365|4|44|19|4|0|0|0|
+Choclo|choclo|1 taza (150 g)|150|135|4.8|29|1.8|3.5|0|0|0|
+Camote|camote|1 unidad (130 g)|130|112|2|26|0.1|3.9|0|0|0|
+Pechuga de pollo|pechuga,pechuga de pollo,pollo,pollo a la plancha,filete de pollo,pollo al horno,pollo cocido,pollo desmenuzado|1 filete (150 g cocido)|150|248|46|0|5.4|0|0|0|0|sP,fry
+Trutro de pollo|trutro,trutro de pollo,pierna de pollo,pollo asado,trutro entero|1 trutro (120 g sin hueso)|120|250|28|0|15|0|0|0|0|fry
+Pavo|pavo,pechuga de pavo,filete de pavo|150 g cocido|150|220|45|0|3|0|0|0|0|sP
+Carne molida|carne molida,molida,carne molida 5%|150 g cocida|150|255|39|0|10.5|0|0|0|0|sP
+Bistec (posta o asiento)|bistec,posta,carne,filete de vacuno,asiento,carne de vacuno,carne a la plancha,palanca|1 bistec (150 g cocido)|150|270|45|0|9.5|0|0|0|0|sP,fry
+Asado (lomo vetado, entraña)|lomo vetado,asado,entrana,lomo liso,costillar,plateada|150 g cocido|150|405|38|0|27|0|0|0|0|
+Chuleta de cerdo|chuleta,chuleta de cerdo,cerdo,lomo de cerdo|1 chuleta (130 g cocida)|130|290|32|0|17.5|0|0|0|0|fry
+Salmón|salmon,filete de salmon|1 filete (150 g cocido)|150|310|33|0|19|0|0|0|0|pes,sP
+Merluza o reineta|merluza,reineta,pescado,congrio,tilapia,pescado a la plancha|1 filete (150 g cocido)|150|165|34|0|2.5|0|0|0|0|pes,sP,fry
+Jurel en lata|jurel,jurel en lata|1/2 lata escurrida (110 g)|110|170|25|0|7.5|0|0|0|0|pes,sP,lata2
+Atún al agua|atun,atun al agua,lata de atun|1 lata escurrida (120 g)|120|130|29|0|1|0|0|0|0|pes,sP
+Atún en aceite|atun en aceite|1 lata escurrida (120 g)|120|235|31|0|12|0|0|0|0|pes
+Jamón de pavo|jamon,jamon de pavo,jamon pierna,lamina de jamon,jamon acaramelado|1 lámina (15 g)|15|17|2.8|0.5|0.4|0|0|0|0|
+Vienesa|vienesa,salchicha|1 unidad (40 g)|40|105|4.5|1.5|9|0|0|0|0|
+Longaniza o chorizo|longaniza,chorizo,choripan|1 unidad (80 g)|80|260|12|1.5|23|0|0|0|0|
+Tofu|tofu|100 g|100|144|15.5|3.5|8.7|2|0|0|0|
+Proteína en polvo|proteina,whey,batido de proteina,scoop,proteina en polvo,shake de proteina|1 scoop (30 g)|30|120|24|3|1.5|0|0|0|0|sP
+Lentejas|lentejas,lenteja|1 taza cocida (200 g)|200|230|18|40|0.8|15.6|0|0|0|leg,sP,plato1.5
+Porotos|porotos,porotos negros,porotos granados,frijoles,porotos burros|1 taza cocida (180 g)|180|225|15|40|0.9|13|0|0|0|leg,plato1.5
+Garbanzos|garbanzos,garbanzo|1 taza cocida (165 g)|165|270|14.5|45|4.2|12.5|0|0|0|leg,plato1.5
+Hummus|hummus|2 cucharadas (30 g)|30|80|2.4|4.3|6|1.8|0|0|0|leg
+Arvejas|arvejas,arveja|1/2 taza (80 g)|80|62|4.1|11|0.3|4.4|1|0|0|
+Lechuga|lechuga,ensalada de lechuga|1 taza (50 g)|50|8|0.7|1.5|0.1|1|1|0|0|sV,plato2
+Tomate|tomate,ensalada de tomate,tomate cherry,tomates cherry|1 unidad (120 g)|120|22|1|4.7|0.2|1.4|1|0|0|sV
+Ensalada chilena|ensalada chilena|1 taza, tomate y cebolla (150 g)|150|35|1.4|7.5|0.2|1.8|1.5|0|0|sV,plato1.5
+Ensalada mixta|ensalada,ensalada mixta,ensalada verde,ensaladas|1 plato, sin aliño (150 g)|150|35|2|6.5|0.3|2.5|1.5|0|0|sV
+Zanahoria|zanahoria,ensalada de zanahoria,zanahoria rallada|1 unidad (80 g)|80|33|0.7|7.7|0.2|2.2|1|0|0|sV
+Brócoli|brocoli|1 taza cocida (155 g)|155|55|3.7|11|0.6|5|2|0|0|sV
+Coliflor|coliflor|1 taza cocida (125 g)|125|29|2.3|5|0.6|2.9|2|0|0|sV
+Zapallo italiano|zapallo italiano,zucchini|1 unidad (200 g)|200|34|2.4|6.2|0.6|2|2|0|0|sV
+Zapallo|zapallo,zapallo camote|1 taza cocido (200 g)|200|80|1.8|20|0.2|5|1|0|0|
+Espinaca|espinaca|1 taza cocida (180 g)|180|41|5.3|6.8|0.5|4.3|2|0|0|sV
+Acelga|acelga|1 taza cocida (175 g)|175|35|3.3|7|0.1|3.7|2|0|0|
+Betarraga|betarraga|1/2 taza (85 g)|85|37|1.4|8.5|0.2|1.7|1|0|0|
+Pepino|pepino,ensalada de pepino|1 taza (120 g)|120|18|0.8|4.3|0.1|0.6|1|0|0|sV
+Porotos verdes|porotos verdes,vainitas|1 taza cocida (125 g)|125|44|2.4|10|0.3|4|2|0|0|sV
+Pimentón|pimenton|1/2 unidad (80 g)|80|22|0.8|4.8|0.2|1.7|1|0|0|
+Champiñones|champinones,champinon,hongos|1 taza (90 g)|90|20|2.8|3|0.3|0.9|1|0|0|
+Cebolla|cebolla|1/2 unidad (60 g)|60|24|0.7|5.6|0|1|0.5|0|0|
+Repollo|repollo,ensalada de repollo|1 taza (90 g)|90|22|1.1|5|0.1|2.3|1|0|0|
+Apio|apio|1 taza (100 g)|100|16|0.7|3|0.2|1.6|1|0|0|
+Verduras salteadas|verduras salteadas,salteado de verduras,wok de verduras,verduras al vapor,verduras|1 taza (150 g)|150|90|3|10|4.5|3.5|1.5|0|0|sV
+Palta|palta,aguacate|1/4 de palta (40 g)|40|64|0.8|3.4|5.9|2.7|0|0|0|cnt4
+Manzana|manzana|1 unidad (150 g)|150|78|0.4|21|0.3|3.6|0|1|0|sF
+Plátano|platano,banana|1 unidad (120 g)|120|107|1.3|27|0.4|3.1|0|1|0|sF
+Naranja|naranja|1 unidad (150 g)|150|71|1.4|18|0.2|3.6|0|1|0|sF
+Mandarina|mandarina,clementina|1 unidad (80 g)|80|43|0.7|11|0.2|1.4|0|0.5|0|
+Pera|pera|1 unidad (170 g)|170|97|0.6|26|0.2|5.3|0|1|0|sF
+Kiwi|kiwi|1 unidad (75 g)|75|46|0.9|11|0.4|2.3|0|1|0|sF
+Frutillas|frutillas,frutilla|1 taza (150 g)|150|48|1|11.5|0.5|3|0|1|0|sF
+Uvas|uvas,uva|1 taza (150 g)|150|104|1.1|27|0.2|1.4|0|1|0|
+Durazno|durazno,nectarin|1 unidad (150 g)|150|59|1.4|14|0.4|2.3|0|1|0|
+Arándanos|arandanos,arandano|1 taza (140 g)|140|80|1|20|0.5|3.4|0|1|0|sF
+Sandía o melón|sandia,melon|1 taza (160 g)|160|50|1|12.5|0.2|0.7|0|1|0|
+Jugo natural|jugo,jugo natural,jugo de naranja|1 vaso (200 ml)|200|90|1.4|21|0.4|0.4|0|0|0|
+Jugo en caja o néctar|jugo en caja,nectar|1 vaso (200 ml)|200|90|0|22|0|0|0|0|0|
+Nueces|nueces,nuez|1 puñado (30 g)|30|196|4.6|4.1|19.5|2|0|0|0|sC
+Almendras|almendras,almendra|1 puñado (30 g)|30|174|6.4|6.5|15|3.7|0|0|0|sC
+Maní|mani|1 puñado (30 g)|30|170|7.7|4.8|14.8|2.4|0|0|0|
+Mantequilla de maní|mantequilla de mani,peanut butter|1 cucharada (16 g)|16|95|3.6|3.2|8|1|0|0|0|sC
+Aceite|aceite,aceite de oliva,aceite vegetal|1 cucharadita (5 ml)|5|45|0|0|5|0|0|0|0|cda3,cucharada3
+Mayonesa|mayonesa,mayo|1 cucharada (15 g)|15|100|0.2|0.1|11|0|0|0|0|
+Ketchup|ketchup|1 cucharada (17 g)|17|17|0.2|4|0|0|0|0|0|
+Mostaza|mostaza|1 cucharadita (5 g)|5|3|0.2|0.3|0.2|0|0|0|0|
+Manjar|manjar,dulce de leche|1 cucharada (20 g)|20|64|1.4|11|1.5|0|0|0|0|
+Mermelada|mermelada|1 cucharada (20 g)|20|50|0|13|0|0|0|0|0|
+Azúcar|azucar|1 cucharadita (5 g)|5|20|0|5|0|0|0|0|0|cda3,cucharada3
+Miel|miel|1 cucharada (21 g)|21|64|0|17|0|0|0|0|0|
+Café o té solo|cafe,te,cafe negro,te solo,agua de hierbas,infusion,mate|1 taza|200|2|0.1|0.3|0|0|0|0|0|
+Café con leche|cafe con leche,cortado,latte,te con leche|1 taza (con 100 ml de leche)|200|50|3.4|5|1.5|0|0|0|0.5|
+Bebida azucarada|bebida,coca cola,coca,fanta,sprite,bebida normal|1 lata (350 ml)|350|147|0|37|0|0|0|0|0|vaso0.6
+Bebida zero o light|coca zero,bebida zero,bebida light,zero|1 lata (350 ml)|350|1|0|0|0|0|0|0|0|
+Cerveza|cerveza,chela,schop|1 lata (350 ml)|350|150|1.6|12.5|0|0|0|0|0|
+Vino|vino,copa de vino,vino tinto,vino blanco|1 copa (150 ml)|150|125|0.1|4|0|0|0|0|0|
+Licuado de plátano con leche|leche con platano,batido de platano,licuado,licuado de platano|1 vaso (300 ml)|300|210|8|38|3.5|2|0|1|1|
+Empanada de pino|empanada,empanada de pino|1 unidad de horno (250 g)|250|560|22|58|26|3|0|0|0|
+Empanada de queso frita|empanada de queso|1 unidad (130 g)|130|380|12|35|21|1.5|0|0|0|
+Completo italiano|completo,completo italiano,hot dog,italiano,dinamico,completo dinamico|1 unidad|250|500|15|45|29|4|0.5|0|0|
+Sopaipilla|sopaipilla|1 unidad (60 g)|60|190|2.8|22|10|1.5|0|0|0|
+Cazuela|cazuela,cazuela de vacuno,cazuela de pollo,cazuela de ave|1 plato|500|380|28|38|12|5|1|0|0|
+Pastel de choclo|pastel de choclo|1 porción en greda (400 g)|400|640|30|60|30|6|0|0|0|
+Porotos con riendas|porotos con riendas,porotos con mazamorra|1 plato (400 g)|400|470|20|75|9|15|0.5|0|0|leg
+Charquicán|charquican|1 plato (350 g)|350|380|18|45|13|7|1|0|0|
+Lentejas guisadas|lentejas guisadas,plato de lentejas,lentejas con arroz|1 plato (350 g)|350|360|22|55|6|18|0.5|0|0|leg
+Humita|humita,humitas|1 unidad (200 g)|200|300|7|45|10|5|0|0|0|
+Arroz con pollo|arroz con pollo|1 plato (350 g)|350|520|35|60|13|2|0|0|0|
+Tallarines con salsa|tallarines con salsa,tallarines bolonesa,fideos con salsa,tallarines con carne,spaghetti bolonesa|1 plato (400 g)|400|560|28|75|15|5|0.5|0|0|
+Pizza|pizza,trozo de pizza|1 trozo (110 g)|110|290|12|33|12|2|0|0|0|
+Hamburguesa|hamburguesa|1 unidad completa|220|540|28|40|29|2.5|0|0|0|
+Sushi|sushi,rolls,roll|10 piezas|250|400|15|65|8|2|0|0|0|
+Handroll|handroll|1 unidad|220|330|12|50|9|1.5|0|0|0|
+Churrasco o Barros Luco|churrasco,barros luco,chacarero,lomito,sandwich de lomo|1 sándwich|300|650|35|55|32|3|0|0|0|
+Sándwich ave palta|ave palta,ave mayo,sandwich,sandwich de pollo|1 sándwich en marraqueta|220|450|25|45|18|3|0|0|0|
+Mote con huesillo|mote con huesillo|1 vaso (400 ml)|400|330|3|78|0.5|4|0|0|0|
+Chocolate|chocolate,barra de chocolate,sahne nuss,trencito|1 barra (30 g)|30|160|2|17|9.5|1|0|0|0|
+Helado|helado|1 bola (60 g)|60|120|2|15|6|0|0|0|0|
+Queque o kuchen|queque,kuchen,torta,pastel,trozo de torta|1 trozo (80 g)|80|300|4.5|42|13|1|0|0|0|
+Barra de cereal|barra de cereal,barrita de cereal|1 unidad (25 g)|25|100|1.5|18|2.5|1|0|0|0|
+Barra de proteína|barra de proteina,barrita proteica,barra proteica|1 unidad (45 g)|45|180|15|18|6|4|0|0|0|sP
+Pan amasado|pan amasado,amasado|1 unidad (100 g)|100|300|8|50|7.5|2|0|0|0|
+Pan de completo|pan de completo,pan de hot dog|1 unidad (60 g)|60|165|5|30|2.5|1.2|0|0|0|
+Pan de hamburguesa|pan de hamburguesa|1 unidad (70 g)|70|190|6.5|35|3|1.5|0|0|0|
+Tostadas|tostada,tostadas,pan tostado|2 rebanadas (50 g)|50|135|4.5|25|1.8|1.5|0|0|0|
+Panqueque|panqueque,panqueques,crepe,crepes|1 unidad (50 g)|50|115|3.5|15|4.5|0.5|0|0|0|
+Waffle|waffle,waffles,gofre|1 unidad (75 g)|75|220|6|25|11|1|0|0|0|
+Tortilla de huevo con verduras|tortilla de huevo,omelette,omelet,tortilla de verduras,tortilla de acelga,tortilla de espinaca|2 huevos con verduras (150 g)|150|200|13.5|4|14.5|1|0.5|0|0|
+Yogur griego|yogur griego,yogurt griego|1 unidad (150 g)|150|150|13|7|7.5|0|0|0|1|
+Leche cultivada|leche cultivada,cultivado|1 unidad (200 ml)|200|150|6|23|3.5|0|0|0|1|
+Queso de cabra|queso de cabra|1 trozo (30 g)|30|95|6|0.5|7.5|0|0|0|0.75|
+Ricotta|ricotta|1/4 taza (60 g)|60|100|7|2|7|0|0|0|0.5|
+Queso crema|queso crema,philadelphia|1 cucharada (15 g)|15|50|1|0.6|5|0|0|0|0|
+Crema de leche|crema,crema de leche|1 cucharada (15 g)|15|50|0.3|0.4|5.3|0|0|0|0|
+Milo o Cola Cao con leche|milo,cola cao,colacao,leche con milo,chocolate caliente|1 taza con leche (220 ml)|220|170|8|25|4|1|0|0|1|
+Jugo en polvo|jugo en polvo,zuko|1 vaso (200 ml)|200|60|0|15|0|0|0|0|0|
+Bebida energética|energetica,red bull,monster,bebida energetica|1 lata (250 ml)|250|115|0|28|0|0|0|0|0|
+Pisco sour|pisco sour|1 vaso (150 ml)|150|240|1|20|0|0|0|0|0|
+Piscola|piscola,roncola,ron con coca|1 vaso (250 ml)|250|210|0|23|0|0|0|0|0|
+Terremoto|terremoto|1 vaso (500 ml)|500|450|0.5|60|1.5|0|0|0|0|
+Cola de mono|cola de mono|1 vaso (150 ml)|150|220|3|25|3|0|0|0|0.5|
+Arroz con leche|arroz con leche|1 taza (250 g)|250|330|8|60|6.5|0.5|0|0|1|
+Sémola con leche|semola con leche,semola|1 taza (250 g)|250|250|8|45|4|0.5|0|0|1|
+Mote de trigo|mote,mote de trigo|1 taza cocido (160 g)|160|190|6|40|1|5|0|0|0|plato1.5
+Ñoquis|noquis,gnocchi|1 plato (250 g)|250|330|7|70|1.5|3|0|0|0|
+Ravioles|ravioles,raviolis|1 plato (250 g)|250|450|18|60|15|3|0|0|0.5|
+Lasaña|lasana,lasagna|1 porción (300 g)|300|480|26|40|23|3|0.5|0|1|
+Canelones|canelones|2 unidades (300 g)|300|450|22|40|22|3|0.5|0|0.5|
+Pollo arvejado|pollo arvejado|1 plato (350 g)|350|380|35|20|17|5|1|0|0|
+Carbonada|carbonada|1 plato (400 g)|400|330|22|35|11|5|1|0|0|
+Ajiaco|ajiaco|1 plato (400 g)|400|320|20|35|11|3|0.5|0|0|
+Pantrucas|pantrucas|1 plato (400 g)|400|380|18|50|12|2|0.5|0|0|
+Chupe de jaiba|chupe de jaiba,chupe de mariscos,chupe de locos,chupe|1 pocillo (250 g)|250|420|25|20|26|1|0|0|0.5|pes
+Paila marina|paila marina|1 plato (450 g)|450|330|40|12|13|1|0.5|0|0|pes
+Caldillo de congrio|caldillo de congrio,caldillo|1 plato (450 g)|450|320|32|22|11|2|0.5|0|0|pes
+Budín de zapallo italiano|budin de zapallo italiano,budin|1 porción (200 g)|200|230|12|12|15|2|1|0|0.5|
+Guiso de zapallo italiano|guiso de zapallo italiano,guiso|1 plato (300 g)|300|200|10|14|11|3|1.5|0|0|
+Tomaticán|tomatican|1 plato (300 g)|300|310|22|20|15|4|1.5|0|0|
+Pastel de papas|pastel de papas|1 porción (350 g)|350|520|28|45|25|4|0|0|0.5|
+Empanada de mariscos|empanada de mariscos|1 unidad (220 g)|220|480|20|50|22|2|0|0|0|pes
+Chorrillana|chorrillana|1 porción para uno (400 g)|400|950|40|65|58|6|0.5|0|0|
+Papas mayo|papas mayo,papas con mayonesa|1 taza (200 g)|200|310|3.5|30|20|3|0|0|0|
+Salpicón|salpicon|1 plato (300 g)|300|250|22|15|12|4|1.5|0|0|
+Choritos|choritos,choros,mejillones|1 taza sin concha (150 g)|150|130|20|5|3.5|0|0|0|0|pes
+Machas a la parmesana|machas,machas a la parmesana|6 unidades (150 g)|150|280|20|5|20|0|0|0|1|pes
+Camarones|camarones,camaron|1 taza (150 g)|150|150|30|1|2|0|0|0|0|pes
+Pescado frito|pescado frito,merluza frita,reineta frita,pescado apanado|1 filete apanado (180 g)|180|380|30|15|22|0.5|0|0|0|pes
+Nuggets de pollo|nuggets,nugget,pollo apanado|6 unidades (100 g)|100|290|15|17|18|1|0|0|0|
+Milanesa|milanesa,escalopa,schnitzel|1 unidad (150 g)|150|420|30|20|24|1|0|0|0|
+Lomo a lo pobre|a lo pobre,bistec a lo pobre,lomo a lo pobre|1 plato con papas fritas, huevos y cebolla|500|1050|55|55|68|5|0|0|0|
+Pernil|pernil|150 g|150|370|35|0|25|0|0|0|0|
+Prieta|prieta|1 unidad (100 g)|100|330|14|8|27|0.5|0|0|0|
+Arrollado|arrollado|2 rodajas (60 g)|60|180|10|1|15|0|0|0|0|
+Cuarto de pollo asado|cuarto de pollo,pollo asado cuarto,cuarto de pollo asado|1/4 de pollo con piel (250 g)|250|500|50|0|33|0|0|0|0|
+Jamón queso|jamon queso,jamon y queso,barros jarpa,sandwich de jamon|1 sándwich en marraqueta|180|420|20|50|15|2.5|0|0|0.5|
+Shawarma|shawarma,shawarma de pollo|1 unidad|350|650|35|60|28|4|0.5|0|0|
+Burrito|burrito|1 unidad|300|600|28|65|24|7|0.5|0|0|
+Taco|taco|1 unidad|100|200|10|18|10|2|0.2|0|0|
+Papas fritas de bolsa|papas fritas de bolsa,chips,papitas,ramitas,doritos,cheetos,suflitos|1 bolsa chica (45 g)|45|240|3|24|15|2|0|0|0|
+Maní confitado|mani confitado|1 bolsa (50 g)|50|260|7|28|14|2|0|0|0|
+Alfajor|alfajor|1 unidad (50 g)|50|220|3|30|10|1|0|0|0|
+Berlín o donut|berlin,dona,donut|1 unidad (80 g)|80|300|5|38|14|1|0|0|0|
+Calzones rotos|calzones rotos|2 unidades (60 g)|60|240|3.5|30|12|0.5|0|0|0|
+Chilenito|chilenito|1 unidad (40 g)|40|170|2|28|6|0.3|0|0|0|
+Cuchuflí|cuchufli|1 unidad (25 g)|25|110|1|18|3.5|0.3|0|0|0|
+Sopaipillas pasadas|sopaipillas pasadas,sopaipilla pasada|2 unidades con chancaca|150|420|4|65|17|2|0|0|0|
+Chirimoya|chirimoya|1 taza (160 g)|160|120|2.5|28|1|4.8|0|1|0|
+Cerezas|cerezas,guindas|1 taza (140 g)|140|88|1.5|22|0.3|3|0|1|0|
+Ciruelas|ciruela,ciruelas|2 unidades (130 g)|130|60|0.9|15|0.4|1.8|0|1|0|
+Damascos|damasco,damascos|3 unidades (105 g)|105|50|1.5|12|0.4|2|0|1|0|
+Mango|mango|1 taza (165 g)|165|100|1.4|25|0.6|2.6|0|1|0|
+Piña|pina,anana|1 taza (165 g)|165|82|0.9|22|0.2|2.3|0|1|0|
+Papaya|papaya|1 taza (145 g)|145|62|0.7|16|0.4|2.5|0|1|0|
+Tunas|tuna,tunas|2 unidades (200 g)|200|82|1.5|19|1|7|0|1|0|
+Pomelo|pomelo|1/2 unidad (150 g)|150|52|1|13|0.2|2|0|1|0|
+Ensalada de frutas|ensalada de frutas,macedonia,fruta picada,fruta,frutas|1 taza (180 g)|180|100|1.2|25|0.3|2.8|0|1|0|
+Pasas|pasas,pasas rubias|1 cucharada (15 g)|15|45|0.5|12|0|0.6|0|0|0|
+Alcachofa|alcachofa|1 unidad (120 g)|120|60|3.5|13|0.2|6.5|1|0|0|
+Espárragos|esparragos|1 taza (135 g)|135|27|3|5|0.2|2.8|1.5|0|0|
+Berenjena|berenjena|1 taza cocida (100 g)|100|35|0.8|8.7|0.2|2.5|1|0|0|
+Habas|habas|1/2 taza (85 g)|85|70|5|12|0.3|4|0|0|0|leg
+Rúcula|rucula,espinaca baby,hojas verdes|1 taza (20 g)|20|5|0.5|0.7|0.1|0.3|0.5|0|0|plato3
+Palmitos|palmitos|1/2 taza (75 g)|75|20|1.8|3.4|0.5|1.8|1|0|0|
+Pebre|pebre|2 cucharadas (30 g)|30|15|0.3|1.5|1|0.4|0.25|0|0|
+Crema o sopa de verduras|crema de verduras,sopa de verduras,crema de zapallo,crema de brocoli,sopa|1 plato (300 ml)|300|150|4|20|6|4|1.5|0|0|
+Chía|chia|1 cucharada (12 g)|12|58|2|5|3.7|4.1|0|0|0|
+Linaza|linaza|1 cucharada (10 g)|10|53|1.8|2.9|4.2|2.7|0|0|0|
+Aceitunas|aceitunas,aceituna|5 unidades (20 g)|20|30|0.2|0.8|3|0.6|0|0|0|
+Salsa de tomate|salsa de tomate,salsa pomarola,pomarola|1/2 taza (125 g)|125|45|1.5|9|0.4|2|0.5|0|0|
+`;
+
+/* ====================== MOTOR LOCAL ======================
+   Todo corre en el teléfono: lectura del texto, corrección de faltas, cantidades,
+   aprendizaje de palabras nuevas, planificador de comidas y consejos. */
+const FIELDS=["k","p","c","g","fi","v","fr","l"];
+function norm(s){return String(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9\/.,%\s]/g," ").replace(/\s+/g," ").trim()}
+function slug(s){return norm(s).replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")}
+function round2(x){return Math.round(x*100)/100}
+function parseBase(txt){
+  return txt.trim().split("\n").map(ln=>{
+    const a=ln.split("|"); const fl=(a[12]||"").split(",").filter(Boolean);
+    const f={id:"b:"+slug(a[0]),n:a[0],al:a[1].split(",").map(norm),q:a[2],gr:+a[3],src:"base",x:{},leg:0,pes:0,fry:0,cnt:0};
+    FIELDS.forEach((k,j)=>f[k]=+a[4+j]);
+    fl.forEach(t=>{ if(t==="leg")f.leg=1; else if(t==="pes")f.pes=1; else if(t==="fry")f.fry=1;
+      else if(/^cnt/.test(t))f.cnt=+t.slice(3);
+      else { const m=t.match(/^([a-z]+)([\d.]+)$/); if(m) f.x[m[1]]=+m[2]; }});
+    return f;
+  });
+}
+const BASE=parseBase(BASE_TXT);
+const WATER={id:"agua",n:"Agua",al:["agua","agua mineral","agua con gas","agua sin gas","vaso de agua"],q:"1 vaso (250 ml)",gr:250,src:"base",x:{litro:4,litros:4,botella:2,botellas:2,jarro:1.5},water:1,k:0,p:0,c:0,g:0,fi:0,v:0,fr:0,l:0,leg:0,pes:0,fry:0,cnt:0};
+const BYNAME={}; BASE.forEach(f=>BYNAME[f.n]=f);
+const HUEVO="Huevo (revuelto en agua, duro o a la copa)";
+
+const QW={un:1,una:1,uno:1,dos:2,tres:3,cuatro:4,cinco:5,seis:6,siete:7,ocho:8,nueve:9,diez:10,medio:.5,media:.5,cuarto:.25,doble:2,par:2};
+const SIZE={grande:1.3,grandes:1.3,chico:.7,chica:.7,chicos:.7,chicas:.7,pequeno:.7,pequena:.7,harto:1.5,harta:1.5,hartos:1.5,hartas:1.5,abundante:1.5,poco:.5,poquito:.4,poca:.5};
+const UNITS="g gr grs gramos ml cc kg litro litros taza tazas vaso vasos cucharada cucharadas cucharadita cucharaditas cda cdas cdta cdtas unidad unidades porcion porciones trozo trozos rebanada rebanadas lamina laminas lata latas bolsa bolsas punado punados pedazo pedazos plato platos pocillo botella botellas caja cajas copa copas jarro rodaja rodajas filete filetes presa presas".split(" ");
+const STOP=new Set(("me comi comimos comio comiste tome tomamos tomo bebi desayune almorce cene once onces comer tomar hoy ayer en el la los las lo un una unos unas de del con sin y e o u a al para por que mas muy bien mi mis su sus tambien luego despues antes desayuno almuerzo cena colacion manana tarde noche dia mediodia "+
+ "cocido cocida cocidos cocidas revuelto revueltos revuelta revueltas frito frita fritos fritas apanado apanada apanados plancha horno vapor hervido hervida hervidos asado asada asados salteado salteada salteados crudo cruda crudos grillado grillada parrilla sarten microondas "+
+ "grande grandes chico chica chicos chicas pequeno pequena mediano mediana medianos entero entera enteros natural light diet casero casera caseros caseras solo sola solos caliente frio fria tibio tibia rico rica ricos ademas igual como otra otro otros otras nada algo tipo estilo etc eso esto esta este ese esa ahi aca alla casi hasta cada todo toda todos porque pero ya le les se nos fue era estaba habia hice hizo preparado preparada picado picada picados rallado rallada molido molida trozado trozada "+
+ "ymedia harto harta hartos hartas poco poca poquito abundante algunos algunas varios varias cerca aprox aproximadamente unos lleno llena normal normales clasico clasica tradicional").split(" ").concat(UNITS));
+STOP.delete("te");
+
+function isAl(ch){return !!ch && /[a-z0-9]/.test(ch)}
+function parseNum(s){s=String(s).replace(",",".");if(/^\d+\/\d+$/.test(s)){const [a,b]=s.split("/").map(Number);return b?a/b:null} const n=parseFloat(s);return isFinite(n)?n:null}
+function isNumTok(w){return /^\d+([.,]\d+)?$|^\d+\/\d+$/.test(w)}
+
+/* Damerau-Levenshtein (alineación óptima) con corte temprano */
+function dist(a,b,max){
+  if(Math.abs(a.length-b.length)>max) return max+1;
+  const m=a.length,n=b.length; let p2=null,p1=Array.from({length:n+1},(_,j)=>j);
+  for(let i=1;i<=m;i++){ const cur=[i]; let best=i;
+    for(let j=1;j<=n;j++){ const c=a[i-1]===b[j-1]?0:1;
+      let v=Math.min(p1[j]+1,cur[j-1]+1,p1[j-1]+c);
+      if(p2&&i>1&&j>1&&a[i-1]===b[j-2]&&a[i-2]===b[j-1]) v=Math.min(v,p2[j-2]+1);
+      cur.push(v); if(v<best)best=v; }
+    if(best>max) return max+1; p2=p1; p1=cur; }
+  return p1[n];
+}
+
+/* Índice de alias: base + alimentos propios + palabras aprendidas */
+function buildIndex(mis,learned){
+  const foods=(mis||[]).concat(BASE,[WATER]); const byId={}; foods.forEach(f=>byId[f.id]=f);
+  const list=[], vocab=new Set();
+  const add=(a,f)=>{ if(!a)return; list.push({a,f}); a.split(" ").forEach(w=>vocab.add(w));
+    if(!/\s/.test(a)&&!/s$/.test(a)){ list.push({a:a+"s",f}); if(/[^aeiou]$/.test(a)) list.push({a:a+"es",f}); } };
+  foods.forEach(f=>{ const set=new Set(f.al&&f.al.length?f.al:[]); set.add(norm(f.n).replace(/\s*\(.*$/,"")); [...set].forEach(a=>add(a,f)); });
+  Object.entries(learned||{}).forEach(([w,id])=>{ if(byId[id]) add(norm(w),byId[id]); });
+  list.sort((x,y)=>y.a.length-x.a.length || (x.f.src==="mio"?-1:1));
+  return {list,vocab,byId,foods};
+}
+
+/* Corrige faltas, diminutivos y plurales palabra por palabra */
+function correct(t,IX){
+  const fixes=[];
+  const out=t.split(" ").map(w=>{
+    if(!w||w.length<3||IX.vocab.has(w)||STOP.has(w)||QW[w]!=null||SIZE[w]!=null||isNumTok(w)||/\d/.test(w)) return w;
+    const tryW=c=>IX.vocab.has(c)?c:null;
+    // diminutivos: huevito, pancito, cafecito, lechita, papitas
+    let m=w.match(/^(.+?)(cit[oa]s?|it[oa]s?|ill[oa]s?)$/);
+    if(m){ const b=m[1]; const r=tryW(b)||tryW(b+"o")||tryW(b+"a")||tryW(b+"e")||(b.endsWith("qu")&&tryW(b.slice(0,-2)+"co"))||(b.endsWith("gu")&&tryW(b.slice(0,-2)+"ga"));
+      if(r){ if(w.endsWith("s")&&IX.vocab.has(r+"s")) return r+"s"; return r; } }
+    // variantes de pronunciación chilena (quesiyo, pebre/pevre, zapayo)
+    const ph=[w.replace(/y/g,"ll"),w.replace(/ll/g,"y"),w.replace(/v/g,"b"),w.replace(/b/g,"v"),w.replace(/z/g,"s"),w.replace(/s/g,"z"),w.replace(/k/g,"c"),w.replace(/^h?ue/,"hue"),w.replace(/h/g,"")];
+    for(const c of ph){ if(c!==w&&IX.vocab.has(c)){ fixes.push([w,c]); return c; } }
+    // plurales que no están en el índice
+    if(w.endsWith("es")&&tryW(w.slice(0,-2))) return w.slice(0,-2);
+    if(w.endsWith("s")&&tryW(w.slice(0,-1))) return w.slice(0,-1);
+    // faltas de ortografía
+    const max=w.length<=4?1:w.length<=7?1:2; let best=null,bd=max+1;
+    for(const v of IX.vocab){ if(v.length<3||Math.abs(v.length-w.length)>max||v[0]!==w[0]&&w.length<6) continue;
+      const d=dist(w,v,max); if(d<bd||(d===bd&&best&&v.length===w.length&&best.length!==w.length)){bd=d;best=v;} if(bd===0)break; }
+    if(best&&bd<=max&&!STOP.has(best)){ fixes.push([w,best]); return best; }
+    return w;
+  });
+  return {t:out.join(" "),fixes};
+}
+
+/* Lee el texto y devuelve alimentos con cantidad */
+function parseText(text,IX){
+  let raw=" "+norm(text)+" ";
+  raw=raw.replace(/ y medi[oa](?= )/g," ymedia").replace(/ (en|con) agua(?= )/g," ").replace(/ cocid[oa]s? en agua /g," ");
+  const cor=correct(raw.trim(),IX); const t=" "+cor.t+" ";
+  const taken=new Array(t.length).fill(false), found=[];
+  IX.list.forEach(({a,f})=>{
+    let i=t.indexOf(a);
+    while(i>=0){ const e=i+a.length;
+      if(!isAl(t[i-1])&&!isAl(t[e])){ let free=true; for(let j=i;j<e;j++) if(taken[j]){free=false;break}
+        if(free){for(let j=i;j<e;j++)taken[j]=true; found.push({s:i,e,f});} }
+      i=t.indexOf(a,i+1); }
+  });
+  found.sort((x,y)=>x.s-y.s);
+  const items=[];
+  found.forEach((m,idx)=>{
+    const prevEnd=idx?found[idx-1].e:0, nextStart=idx<found.length-1?found[idx+1].s:t.length;
+    let pre=t.slice(prevEnd,m.s); const suf=t.slice(m.e,nextStart); const f=m.f;
+    pre=pre.split(/\s(?:y|e|con|mas|ademas|luego|despues|tambien)\s|[,+;]/).pop();
+    let fac=1, qtxt="", byAmount=false;
+    const gm=pre.match(/(\d+(?:[.,]\d+)?)\s*(g|gr|grs|gramos|ml|cc|kg)\s*(?:de\s+)?$/) || suf.match(/^\s*(?:de\s+)?(\d+(?:[.,]\d+)?)\s*(g|gr|grs|gramos|ml|cc|kg)\b/);
+    if(gm && f.gr>0){ let g=parseNum(gm[1]); if(gm[2]==="kg") g*=1000; fac=g/f.gr; byAmount=true; qtxt=Math.round(g)+" "+(/ml|cc/.test(gm[2])?"ml":"g"); }
+    else{
+      const toks=pre.trim().split(" ").filter(Boolean);
+      let cnt=null, ci=-1;
+      toks.forEach((w,i)=>{ if(w==="ymedia"){ if(cnt!=null)cnt+=.5; return; } const v=QW[w]!=null?QW[w]:(isNumTok(w)?parseNum(w):null); if(v!=null){ cnt=v; ci=i; } });
+      let unitF=null;
+      toks.slice(ci+1).forEach(w=>{ const b=w.replace(/(es|s)$/,""); if(f.x[w]!=null)unitF=f.x[w]; else if(f.x[b]!=null)unitF=f.x[b]; });
+      if(cnt!=null) fac=cnt*(unitF!=null?unitF:(f.cnt||1)); else if(unitF!=null) fac=unitF;
+    }
+    // tamaño: grande, chico, harto, un poco
+    const near=pre.trim().split(" ").slice(-3).concat(suf.trim().split(" ").slice(0,2));
+    let sz=1; near.forEach(w=>{ if(SIZE[w]!=null) sz=SIZE[w]; }); if(!byAmount) fac*=sz;
+    if(!(fac>0)) fac=1;
+    if(f.water){ items.push({water:1,n:"Agua",q:"vasos de 250 ml",f:Math.max(1,Math.round(fac*2)/2),b:{k:0,p:0,c:0,g:0,fi:0,v:0,fr:0,l:0}}); return; }
+    let name=f.n, b={}; FIELDS.forEach(k=>b[k]=f[k]);
+    if(f.fry && /frit|apanad/.test(suf.slice(0,24))){ b.k+=60; b.g+=6.5; name+=" (frito)"; }
+    if(byAmount){ FIELDS.forEach(k=>b[k]=round2(b[k]*fac)); fac=1; }
+    items.push({n:name,q:qtxt||f.q,f:round2(fac),b,leg:f.leg,pes:f.pes,src:f.src==="mio"?"mio":"base",fid:f.id});
+  });
+  // palabras que no reconocí
+  const unknown=[]; let w="", ws=0;
+  const flush=end=>{ if(w.length>=3&&!STOP.has(w)&&QW[w]==null&&SIZE[w]==null&&!isNumTok(w)&&!/^\d/.test(w)&&!unknown.includes(w)) unknown.push(w); w=""; };
+  for(let i=0;i<t.length;i++){ const ch=t[i]; if(isAl(ch)&&!taken[i]){ if(!w)ws=i; w+=ch; } else flush(i); }
+  return {items,unknown,fixes:cor.fixes};
+}
+
+/* Candidatos para una palabra que no reconocí */
+function suggestFoods(word,IX,n){
+  const w=norm(word); const grams=s=>{const g=new Set(); const x="  "+s+" "; for(let i=0;i<x.length-2;i++)g.add(x.slice(i,i+3)); return g;};
+  const gw=grams(w); const scored=[];
+  IX.foods.filter(f=>!f.water).forEach(f=>{ let best=0;
+    (f.al&&f.al.length?f.al:[norm(f.n)]).concat([norm(f.n)]).forEach(a=>{ a.split(" ").concat([a]).forEach(part=>{ const ga=grams(part); let inter=0; gw.forEach(g=>{if(ga.has(g))inter++;}); const s=inter/(gw.size+ga.size-inter); if(s>best)best=s; }); });
+    scored.push([best,f]); });
+  return scored.sort((a,b)=>b[0]-a[0]).slice(0,n||6).filter(x=>x[0]>0.12).map(x=>x[1]);
+}
+
+/* ====================== PLANIFICADOR ====================== */
+const SLOTS=[["desayuno",5,11,.25],["colacion",11,12.5,.1],["almuerzo",12.5,16,.33],["once",16,19.5,.17],["cena",19.5,24,.25]];
+const T_DES=[[["Avena",1],["Leche descremada",1],["Plátano",1]],[[HUEVO,2],["Pan de molde integral",2],["Palta",1],["Tomate",1]],[["Yogur proteico",1],["Granola",.5],["Frutillas",1]],[[HUEVO,2],["Marraqueta",1],["Quesillo",1],["Naranja",1]],[["Leche semidescremada",1],["Pan ciabatta",1],["Jamón de pavo",3],["Queso laminado (gauda o mantecoso)",1]],[["Yogur griego",1],["Avena",1],["Arándanos",1]]];
+const T_COL=[[["Manzana",1],["Almendras",1]],[["Yogur proteico",1],["Plátano",1]],[["Plátano",1],["Mantequilla de maní",1],["Pan de molde integral",1]],[["Leche descremada",1],["Nueces",1]],[["Queso cottage",1],["Arándanos",1]],[[HUEVO,2],["Zanahoria",1]]];
+const T_ONCE=[[["Marraqueta",1],["Palta",2],[HUEVO,1],["Café o té solo",1]],[["Pan de molde integral",2],["Quesillo",1],["Tomate",1],["Café o té solo",1]],[["Hallulla",1],["Jamón de pavo",3],["Queso laminado (gauda o mantecoso)",1],["Café o té solo",1]],[["Yogur natural",1],["Avena",1],["Manzana",1]],[["Pan ciabatta",1],["Atún al agua",.5],["Lechuga",1],["Tomate",1]]];
+const MP=[["Pechuga de pollo",1],["Bistec (posta o asiento)",1],["Salmón",1],["Merluza o reineta",1],["Carne molida",1],["Pavo",1],["Lentejas",1.5],["Atún al agua",1],["Garbanzos",1],[HUEVO,3],["Porotos",1.5]];
+const MC=[["Arroz blanco",1],["Fideos",1],["Papa cocida",1.5],["Quínoa",1],["Arroz integral",1],["Puré de papas",1],["Camote",1],[null,0]];
+const MV=[["Ensalada chilena",1],["Brócoli",1],["Ensalada mixta",1],["Zapallo italiano",1],["Porotos verdes",1],["Espinaca",1],["Zanahoria",1],["Coliflor",1]];
+
+function slotNow(h){ for(let i=SLOTS.length-1;i>=0;i--) if(h>=SLOTS[i][1]) return i; return 4; }
+function sumComp(comp){ const t={k:0,p:0,c:0,g:0,fi:0,v:0,fr:0,l:0,leg:0,pes:0}; comp.forEach(([f,x])=>{ FIELDS.forEach(k=>t[k]+=f[k]*x); if(f.leg)t.leg=1; if(f.pes)t.pes=1; }); return t; }
+function score(t,tg,ctx){
+  let e=Math.abs(t.k-tg.k)/Math.max(tg.k,150);
+  e+=Math.max(0,tg.p-t.p)/Math.max(tg.p,12)*2.2 + Math.max(0,t.p-tg.p*1.7)/Math.max(tg.p,12)*.4;
+  e+=Math.max(0,tg.v-t.v)*.35 + Math.max(0,tg.fr-t.fr)*.2;
+  if(ctx.wantLeg&&t.leg) e-=.08; if(ctx.wantPes&&t.pes) e-=.08;
+  return e;
+}
+function prefOf(comp,ctx){ let s=0; comp.forEach(([f])=>{ const fq=ctx.freq[f.n]||0; s-=Math.min(.12,Math.log1p(fq)*.03); if(ctx.eaten.has(f.n)) s+=(f.p>10?.35:.15); }); return s; }
+const F=n=>BYNAME[n];
+function qround(f,x){ return /^(1|2) (unidad|lamina|lámina|rebanada|clara|rodaja)/.test(f.q)||f.n===HUEVO ? Math.max(1,Math.round(x)) : Math.max(.5,Math.round(x*2)/2); }
+function bestTemplates(tpls,tg,ctx,top){
+  const res=[];
+  tpls.forEach((tp,ti)=>{
+    const comp0=tp.map(([n,x])=>[F(n),x]).filter(c=>c[0]); if(!comp0.length) return;
+    let pi=0; comp0.forEach((c,i)=>{ if(c[0].p*c[1]>comp0[pi][0].p*comp0[pi][1]) pi=i; });
+    let best=null;
+    [.75,1,1.25,1.5,2].forEach(g=>[1,1.5,2].forEach(pb=>{
+      const comp=comp0.map(([f,x],i)=>{ const scal=f.k>15&&!f.fr; return [f,scal?qround(f,Math.min(x*2,x*g*(i===pi?pb:1))):x]; });
+      const t=sumComp(comp); const s=score(t,tg,ctx)+prefOf(comp,ctx)+((ti*13+ctx.seed)%7)*.004;
+      if(!best||s<best.s) best={s,comp,t}; }));
+    res.push(best);
+  });
+  return res.sort((a,b)=>a.s-b.s).slice(0,top);
+}
+function bestMains(tg,ctx,top){
+  const byP={};
+  MP.forEach(([pn,px],pi)=>{ const P=F(pn); if(!P) return;
+    const [vn,vx]=MV[(pi*3+ctx.seed)%MV.length]; let V=F(vn); if(ctx.eaten.has(vn)) V=F(MV[(pi*3+ctx.seed+1)%MV.length][0]);
+    const vf=Math.min(2,Math.max(1,Math.ceil((tg.v||0)/Math.max(V.v,.5)*2)/2));
+    MC.forEach(([cn,cx],ci)=>{ const C=cn?F(cn):null; if(cn&&!C) return; if(!C&&!P.leg) return;
+      [.67,1,1.33,1.67].forEach(pf=>(C?[.5,.75,1,1.5,2]:[1]).forEach(cf=>[0,1,2,3].forEach(oil=>{
+        const comp=[[P,qround(P,px*pf)]]; if(C) comp.push([C,qround(C,cx*cf)]); comp.push([V,vx*vf]); if(oil) comp.push([F("Aceite"),oil]);
+        const t=sumComp(comp); const s=score(t,tg,ctx)+prefOf(comp,ctx)+((pi*7+ci*3+ctx.seed)%11)*.003;
+        if(!byP[pn]||s<byP[pn].s) byP[pn]={s,comp,t}; }))); }); });
+  return Object.values(byP).sort((a,b)=>a.s-b.s).slice(0,top);
+}
+/* ctx: {M, T, dayItems, hour, freq, weekLeg, weekPes, seed} */
+function planRest(ctx){
+  const M=ctx.M, T=ctx.T; const gap={k:M.kcal-T.k,p:M.prot-T.p,v:M.v-T.v,fr:M.fr-T.fr};
+  if(gap.k<120&&gap.p<8) return {done:true,gap,meals:[]};
+  const cur=slotNow(ctx.hour); const used=new Set(ctx.dayItems.map(i=>i.t));
+  let rem=SLOTS.map((s,i)=>i).filter(i=>i>cur||(i===cur&&!used.has(SLOTS[i][0])));
+  const mainsLeft=rem.filter(i=>SLOTS[i][0]!=="colacion").length;
+  if(rem.includes(1)&&!(gap.k/Math.max(1,mainsLeft)>650)) rem=rem.filter(i=>i!==1);
+  if(!rem.length) rem=[1];
+  const wsum=rem.reduce((a,i)=>a+SLOTS[i][3],0);
+  const vegSlots=rem.filter(i=>[2,4].includes(i)), frSlots=rem.filter(i=>[0,1,3].includes(i));
+  const eaten=new Set(ctx.dayItems.map(i=>i.n));
+  const c2={freq:ctx.freq||{},eaten,wantLeg:ctx.weekLeg<2,wantPes:ctx.weekPes<2,seed:ctx.seed||0};
+  const meals=[]; let left={...gap};
+  rem.forEach((i,ord)=>{
+    const w=SLOTS[i][3]/rem.slice(ord).reduce((a,j)=>a+SLOTS[j][3],0);
+    const tg={k:Math.max(150,left.k*w),p:Math.max(0,left.p*w),
+      v:vegSlots.length?(vegSlots.includes(i)?Math.max(0,left.v)/vegSlots.filter(j=>rem.indexOf(j)>=ord).length:0):Math.max(0,left.v)*w,
+      fr:frSlots.includes(i)?Math.max(0,left.fr)/Math.max(1,frSlots.filter(j=>rem.indexOf(j)>=ord).length):0};
+    const key=SLOTS[i][0];
+    const opts=key==="desayuno"?bestTemplates(T_DES,tg,c2,3):key==="colacion"?bestTemplates(T_COL,tg,c2,3):key==="once"?bestTemplates(T_ONCE,tg,c2,3):bestMains(tg,c2,3);
+    meals.push({slot:key,tg,opts});
+    const pick=opts[0]; if(pick){ left.k-=pick.t.k; left.p-=pick.t.p; left.v-=pick.t.v; left.fr-=pick.t.fr; pick.comp.forEach(([f])=>c2.eaten.add(f.n)); }
+  });
+  return {done:false,gap,meals};
+}
+function compToItems(comp){ return comp.map(([f,x])=>{ const b={}; FIELDS.forEach(k=>b[k]=f[k]); return {n:f.n,q:f.q,f:x,b,leg:f.leg,pes:f.pes,src:"plan",fid:f.id}; }); }
+
+/* ====================== CONSEJOS ====================== */
+function coach(ctx){
+  const M=ctx.M,T=ctx.T,h=ctx.hour,out=[];
+  if(T.v<0.5&&h>=14&&ctx.dayItems.length) out.push("Todavía no hay verduras hoy. Suma una ensalada o un plato de verduras a tu próxima comida.");
+  const byMeal={}; ctx.dayItems.forEach(it=>{ const m=byMeal[it.t]||(byMeal[it.t]={k:0,p:0}); m.k+=it.b.k*it.f; m.p+=it.b.p*it.f; });
+  const low=Object.entries(byMeal).find(([m,v])=>v.k>300&&v.p<18&&m!=="colacion");
+  if(low) out.push(`Tu ${({desayuno:"desayuno",almuerzo:"almuerzo",once:"once",cena:"cena"})[low[0]]} tuvo ${Math.round(low[1].p)} g de proteína. Con 25 a 35 g por comida llegas más fácil a tu meta.`);
+  const sweet=ctx.dayItems.filter(it=>/Bebida azucarada|Jugo|energ|Terremoto|Piscola/.test(it.n)).reduce((a,it)=>a+it.b.k*it.f,0);
+  if(sweet>=180) out.push(`Las bebidas y jugos de hoy suman ${Math.round(sweet)} kcal casi sin proteína ni fibra.`);
+  if(ctx.obj==="subir"&&h>=19&&T.k<M.kcal*0.7) out.push(`Para subir de peso te faltan ${Math.round(M.kcal-T.k)} kcal. Una colación densa, como plátano con mantequilla de maní o un licuado con leche, suma 300 a 400 kcal fácil.`);
+  if(ctx.obj==="bajar"&&T.k>M.kcal*1.1) out.push("Hoy pasaste tu meta. Mañana prioriza proteína y verduras, que llenan con menos calorías.");
+  const dow=ctx.dow; if(dow>=3&&ctx.weekLeg<2) out.push(`Esta semana llevas ${ctx.weekLeg} ${ctx.weekLeg===1?"día":"días"} con legumbres; las Guías recomiendan al menos 2.`);
+  if(dow>=3&&ctx.weekPes<2) out.push(`Esta semana llevas ${ctx.weekPes} ${ctx.weekPes===1?"día":"días"} con pescado; lo recomendado son 2.`);
+  return out.slice(0,2);
+}
+
+if(typeof module!=="undefined") module.exports={BASE,BYNAME,buildIndex,parseText,correct,suggestFoods,planRest,compToItems,coach,norm,FIELDS,slotNow,SLOTS};
+
+/* "1 taza (140 g)" × 2 → "2 tazas (280 g)" */
+function fmtQ(n){ const fr={0.25:"1/4",0.5:"1/2",0.75:"3/4"}; if(fr[n]) return fr[n]; const r=Math.round(n*100)/100; return String(r).replace(".",","); }
+function plural(w){ if(/^(de|con|sin|cocid[oa]|cocido|chica|grande|mediana?|entero|y)$/.test(w)) return w; if(/[aeiou]$/.test(w)) return w+"s"; if(/z$/.test(w)) return w.slice(0,-1)+"ces"; if(/[lnrd]$/.test(w)) return w+"es"; if(/c$/.test(w)) return w+"s"; return w; }
+function scaleQ(q,x){
+  q=String(q||""); if(!x||x===1) return q;
+  const m=q.match(/^(\d+\/\d+|\d+(?:[.,]\d+)?)\s+(.*)$/);
+  if(!m) return fmtQ(x)+" × "+q;
+  const base=m[1].includes("/")?(()=>{const [a,b]=m[1].split("/").map(Number);return a/b;})():parseFloat(m[1].replace(",","."));
+  const tot=base>=10?Math.round(base*x):Math.round(base*x*100)/100;
+  let rest=m[2].replace(/\((\d+(?:[.,]\d+)?)\s*(g|ml)([^)]*)\)/,(all,n,u,tail)=>"("+Math.round(parseFloat(n.replace(",","."))*x)+" "+u+tail+")");
+  if(tot>1&&base<=1){ rest=rest.replace(/^([a-záéíóúñ]+)/i,w=>plural(w)); }
+  return fmtQ(tot)+" "+rest;
+}
+if(typeof module!=="undefined") module.exports.scaleQ=scaleQ;
+
+/* ====================== ESTADO (solo en este teléfono) ====================== */
+const VERSION="2.0.0";
+const LS="plato-diario-v1";
+const MEALS=[["desayuno","Desayuno"],["colacion","Colación"],["almuerzo","Almuerzo"],["once","Once"],["cena","Cena"]];
+const MEAL_ORDER=MEALS.map(m=>m[0]);
+const mealName=k=>(MEALS.find(m=>m[0]===k)||[k,k])[1];
+function blank(){return {v:2,perfil:null,pin:null,mis:[],alias:{},freq:{},pesos:[],cfg:{},upd:0,bkLast:0,dias:{}}}
+function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function lsSet(k,v){try{localStorage.setItem(k,v);return true}catch(e){return false}}
+function ssGet(k){try{return sessionStorage.getItem(k)}catch(e){return null}}
+function ssSet(k,v){try{sessionStorage.setItem(k,v)}catch(e){}}
+function migrate(r){ const s=Object.assign(blank(),r||{}); s.alias=s.alias||{}; s.freq=s.freq||{}; s.mis=(s.mis||[]).map(m=>Object.assign({x:{},al:[norm(m.n)],src:"mio",gr:0},m,{id:m.id&&m.id.startsWith("m")?m.id:"m"+uid()})); return s; }
+let S=(()=>{try{const r=JSON.parse(lsGet(LS)||"null"); if(r&&r.dias) return migrate(r);}catch(e){} return blank();})();
+function save(){ if(!lsSet(LS,JSON.stringify(S))) toast("No pude guardar. Revisa el espacio del teléfono."); }
+const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4);
+try{ navigator.storage&&navigator.storage.persist&&navigator.storage.persist(); }catch(e){}
+
+const pad=n=>String(n).padStart(2,"0");
+function keyOf(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())}
+function fromKey(k){const [y,m,d]=k.split("-").map(Number);return new Date(y,m-1,d)}
+function addDays(k,n){const d=fromKey(k);d.setDate(d.getDate()+n);return keyOf(d)}
+const TODAY=()=>keyOf(new Date());
+let CUR=TODAY();
+function day(k){return S.dias[k]||{items:[],agua:0,upd:0}}
+function ensureDay(k){if(!S.dias[k])S.dias[k]={items:[],agua:0,upd:0};return S.dias[k]}
+function touchDay(k){ensureDay(k).upd=Date.now();save()}
+function touchPerfil(){S.upd=Date.now();save()}
+
+let IX=null; function ix(){ if(!IX) IX=buildIndex(S.mis,S.alias); return IX; }
+function ixDirty(){ IX=null; }
+
+/* ====================== METAS ====================== */
+const ACT=[[1.2,"Sedentario (casi todo el día sentado)"],[1.375,"Ligero (de pie a ratos, caminatas)"],[1.55,"Moderado (ejercicio 3 a 5 días)"],[1.725,"Alto (ejercicio intenso casi a diario)"]];
+function latestPeso(){const a=(S.pesos||[]).slice().sort((x,y)=>x.f<y.f?-1:1);return a.length?a[a.length-1].kg:null}
+function metas(p){
+  p=p||S.perfil; if(!p) return null;
+  const peso=latestPeso()||p.peso;
+  const tmb=10*peso+6.25*p.talla-5*p.edad+(p.sexo==="m"?-161:5);
+  const get=tmb*p.act;
+  const ajuste=p.obj==="subir"?p.sup:p.obj==="bajar"?-p.sup:0;
+  const kcal=p.metaKcal>0?p.metaKcal:Math.round((get+ajuste)/10)*10;
+  const prot=p.metaProt>0?p.metaProt:Math.round(peso*p.protKg);
+  const g=Math.round(kcal*0.28/9);
+  const c=Math.max(0,Math.round((kcal-prot*4-g*9)/4));
+  return {kcal,prot,g,c,fi:Math.max(25,Math.round(kcal*0.014)),v:3,fr:2,l:3,agua:8,tmb:Math.round(tmb),get:Math.round(get),peso};
+}
+function tot(items){const t={k:0,p:0,c:0,g:0,fi:0,v:0,fr:0,l:0,leg:0,pes:0};
+  items.forEach(it=>{FIELDS.forEach(k=>t[k]+=(it.b[k]||0)*it.f); if(it.leg)t.leg=1; if(it.pes)t.pes=1;});return t}
+function weekCount(flag,k){
+  k=k||CUR; const d=fromKey(k); const dow=(d.getDay()+6)%7; let n=0;
+  for(let i=0;i<=dow;i++){ const kk=addDays(k,-i); if((S.dias[kk]||{items:[]}).items.some(it=>it[flag])) n++; }
+  return n;
+}
+
+/* ====================== PIN ====================== */
+async function hashPin(p){
+  const s="plato-diario:"+p;
+  try{ const buf=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));
+    return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join(""); }
+  catch(e){ let h=5381; for(const ch of s) h=((h<<5)+h+ch.charCodeAt(0))|0; return "d"+(h>>>0).toString(16); }
+}
+function showLock(){ $("lock").hidden=false; $("lockHello").textContent=S.perfil&&S.perfil.nombre?`Hola, ${S.perfil.nombre}. Ingresa tu PIN`:"Ingresa tu PIN"; setTimeout(()=>$("lockIn").focus(),60); }
+async function tryUnlock(){
+  const v=$("lockIn").value.trim();
+  if(await hashPin(v)===S.pin){ ssSet("pd-ok","1"); $("lock").hidden=true; $("lockErr").hidden=true; $("lockIn").value=""; render(); }
+  else { $("lockErr").hidden=false; $("lockIn").value=""; }
+}
+
+/* ====================== UTILIDADES UI ====================== */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const nf0=new Intl.NumberFormat("es-CL",{maximumFractionDigits:0});
+const nf1=new Intl.NumberFormat("es-CL",{maximumFractionDigits:1});
+const nf2=new Intl.NumberFormat("es-CL",{maximumFractionDigits:2});
+const fk=n=>nf0.format(Math.round(n||0));
+const fg=n=>(n||0)<10?nf1.format(n||0):nf0.format(Math.round(n||0));
+const fp=n=>nf1.format(Math.round((n||0)*2)/2);
+function toast(msg){ const h=$("toastHost"); h.innerHTML=`<div class="toast" role="status">${esc(msg)}</div>`; clearTimeout(toast.t); toast.t=setTimeout(()=>h.innerHTML="",2600); }
+function hourNow(){ const d=new Date(); return d.getHours()+d.getMinutes()/60; }
+function mealNow(){ return SLOTS[slotNow(hourNow())][0]; }
+function dayLabel(k){ const t=TODAY(); if(k===t) return "Hoy"; if(k===addDays(t,-1)) return "Ayer";
+  return fromKey(k).toLocaleDateString("es-CL",{weekday:"long",day:"numeric",month:"long"}); }
+function qLabel(it){ return scaleQ(it.q,it.f); }
+
+/* ====================== VISTAS ====================== */
+let TAB="hoy", PREV=[], PREV_NOTE="", PREV_UNK=[], PREV_FIX=[], SHOW_ALL_PLAN=false, FFILTER="all";
+function render(){
+  const setupNeeded=!S.perfil;
+  $("vSetup").hidden=!setupNeeded;
+  document.querySelector(".tabs").hidden=setupNeeded;
+  const V={hoy:"vHoy",hist:"vHist",alim:"vAlim",ajus:"vAjus"};
+  Object.keys(V).forEach(t=>$(V[t]).hidden=setupNeeded||TAB!==t);
+  document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-current",b.dataset.tab===TAB?"page":"false"));
+  $("hello").textContent=S.perfil&&S.perfil.nombre?S.perfil.nombre:"";
+  if(setupNeeded){ renderSetup(); return; }
+  if(TAB==="hoy") renderHoy(); else if(TAB==="hist") renderHist(); else if(TAB==="alim") renderAlim(); else renderAjus();
+}
+
+function perfilFields(p,pre){
+  p=p||{sexo:"",edad:"",talla:"",peso:"",act:1.375,obj:"mantener",sup:400,protKg:1.8};
+  return `<div class="grid2">
+    <div class="field"><label for="${pre}sexo">Sexo</label><select id="${pre}sexo"><option value="h"${p.sexo==="h"?" selected":""}>Hombre</option><option value="m"${p.sexo==="m"?" selected":""}>Mujer</option></select></div>
+    <div class="field"><label for="${pre}edad">Edad (años)</label><input id="${pre}edad" type="number" inputmode="numeric" min="14" max="99" value="${esc(p.edad)}" placeholder="30"></div>
+    <div class="field"><label for="${pre}talla">Estatura (cm)</label><input id="${pre}talla" type="number" inputmode="numeric" min="120" max="230" value="${esc(p.talla)}" placeholder="170"></div>
+    <div class="field"><label for="${pre}peso">Peso (kg)</label><input id="${pre}peso" type="number" inputmode="decimal" step="0.1" min="30" max="250" value="${esc(p.peso)}" placeholder="65"></div>
+  </div>
+  <div class="field"><label for="${pre}act">Actividad diaria</label><select id="${pre}act">${ACT.map(([v,t])=>`<option value="${v}"${+p.act===v?" selected":""}>${t}</option>`).join("")}</select></div>
+  <div class="grid2">
+    <div class="field"><label for="${pre}obj">Objetivo</label><select id="${pre}obj">
+      <option value="subir"${p.obj==="subir"?" selected":""}>Subir de peso</option>
+      <option value="mantener"${p.obj==="mantener"?" selected":""}>Mantener</option>
+      <option value="bajar"${p.obj==="bajar"?" selected":""}>Bajar de peso</option></select></div>
+    <div class="field"><label for="${pre}sup">Kcal a sumar o restar</label><select id="${pre}sup">${[250,300,400,500].map(v=>`<option value="${v}"${+p.sup===v?" selected":""}>${v}</option>`).join("")}</select></div>
+  </div>
+  <div class="field"><label for="${pre}prot">Proteína por kilo</label><select id="${pre}prot">${[1.2,1.4,1.6,1.8,2.0,2.2].map(v=>`<option value="${v}"${+p.protKg===v?" selected":""}>${nf1.format(v)} g/kg</option>`).join("")}</select></div>`;
+}
+function readPerfil(pre,old){
+  const p=Object.assign({},old||{});
+  p.sexo=$(pre+"sexo").value; p.edad=+$(pre+"edad").value; p.talla=+$(pre+"talla").value; p.peso=+String($(pre+"peso").value).replace(",",".");
+  p.act=+$(pre+"act").value; p.obj=$(pre+"obj").value; p.sup=+$(pre+"sup").value; p.protKg=+$(pre+"prot").value;
+  if(!(p.edad>=14&&p.edad<=99)) return "Escribe tu edad (entre 14 y 99 años).";
+  if(!(p.talla>=120&&p.talla<=230)) return "La estatura va en centímetros, por ejemplo 165.";
+  if(!(p.peso>=30&&p.peso<=250)) return "El peso va en kilos, por ejemplo 60.";
+  return p;
+}
+function renderSetup(){ if(!$("sedad")) $("setupForm").innerHTML=perfilFields(null,"s"); }
+
+function bar(label,val,goal,color,unit){
+  const pct=goal>0?Math.min(100,val/goal*100):0;
+  return `<div class="bar"><div class="t"><b>${label}</b><span class="num">${fg(val)} / ${fg(goal)} ${unit}</span></div>
+    <div class="track"><div class="fill" style="width:${pct}%;background:${color}"></div></div></div>`;
+}
+function renderHoy(){
+  const M=metas(), d=day(CUR), T=tot(d.items);
+  $("installTip").hidden=!showInstallTip();
+  $("dLbl").textContent=dayLabel(CUR); $("dNext").style.visibility=CUR>=TODAY()?"hidden":"visible";
+  const R=64, C=2*Math.PI*R, pct=Math.min(1,T.k/M.kcal), over=T.k-M.kcal;
+  $("ring").innerHTML=`<svg viewBox="0 0 150 150" aria-hidden="true"><circle cx="75" cy="75" r="${R}" fill="none" stroke="var(--surface-2)" stroke-width="14"/>
+    <circle cx="75" cy="75" r="${R}" fill="none" stroke="${over>0?"var(--warn)":"var(--accent)"}" stroke-width="14" stroke-linecap="round" stroke-dasharray="${C*pct} ${C}"/></svg>
+    <div class="c"><span class="big num">${fk(T.k)}</span><span class="small muted num">de ${fk(M.kcal)} kcal</span>
+    <span class="small num" style="font-weight:700;color:${over>0?"var(--warn)":"var(--accent)"}">${over>0?"+"+fk(over)+" sobre la meta":"faltan "+fk(-over)}</span></div>`;
+  $("ring").setAttribute("aria-label",`${fk(T.k)} de ${fk(M.kcal)} kilocalorías`);
+  $("macros").innerHTML=bar("Proteína",T.p,M.prot,"var(--prot)","g")+bar("Carbos",T.c,M.c,"var(--carb)","g")+bar("Grasas",T.g,M.g,"var(--fat)","g")+bar("Fibra",T.fi,M.fi,"var(--veg)","g");
+  const chips=[["Proteína",T.p>=M.prot*0.95,`${fk(T.p)}/${M.prot} g`],["Verduras",T.v>=M.v,`${fp(T.v)}/${M.v}`],["Frutas",T.fr>=M.fr,`${fp(T.fr)}/${M.fr}`],["Lácteos",T.l>=M.l,`${fp(T.l)}/${M.l}`],["Agua",(d.agua||0)>=6,`${d.agua||0}/${M.agua}`]];
+  $("balance").innerHTML=chips.map(([n,ok,v])=>`<span class="chip${ok?" ok":""}"><span class="pip" aria-hidden="true"></span>${n} <span class="num">${v}</span>${ok?" ✓":""}</span>`).join("");
+  const ms=$("mealSel"); if(!ms.dataset.ready){ ms.innerHTML=MEALS.map(([v,t])=>`<option value="${v}">${t}</option>`).join(""); ms.value=mealNow(); ms.dataset.ready="1"; }
+  renderRecents(); renderPreview(); renderPlan(M,T,d);
+  const a=d.agua||0; $("aguaLbl").textContent=`${a} de 6 a 8 vasos`;
+  $("glasses").innerHTML=Array.from({length:Math.max(8,a)},(_,i)=>`<span class="glass${i<a?" on":""}" aria-hidden="true"></span>`).join("");
+  const groups=MEAL_ORDER.map(m=>[m,d.items.filter(it=>it.t===m)]);
+  $("meals").innerHTML= d.items.length? groups.filter(g=>g[1].length).map(([m,its])=>{ const tt=tot(its);
+    return `<div class="meal"><div class="meal-h"><h3>${mealName(m)}</h3><span class="small num"><b>${fk(tt.k)}</b> kcal · <span style="color:var(--prot);font-weight:700">${fk(tt.p)} g prot</span></span></div>
+      ${its.map(it=>`<button class="entry" data-edit="${it.id}"><span class="nm">${esc(it.n)}</span><span class="k num">${fk(it.b.k*it.f)} kcal</span>
+        <span class="small muted">${esc(qLabel(it))}</span><span class="small num" style="text-align:right;color:var(--prot)">${fg(it.b.p*it.f)} g</span></button>`).join("")}</div>`;}).join("")
+    : `<div class="empty">Todavía no hay nada registrado ${CUR===TODAY()?"hoy":"este día"}. Escribe arriba lo que comiste, por ejemplo "un pan ciabatta con palta y un café con leche".</div>`;
+}
+function renderRecents(){
+  const seen=new Map();
+  for(let i=0;i<21&&seen.size<10;i++){ const k=addDays(TODAY(),-i); const its=(S.dias[k]||{items:[]}).items.slice().reverse();
+    its.forEach(it=>{ const key=norm(it.n)+"|"+it.f; if(!seen.has(key)&&seen.size<10) seen.set(key,it); }); }
+  const arr=[...seen.values()];
+  const ex=["2 huevos revueltos en agua","1 pan ciabatta","150 g de pechuga de pollo","1 taza de brócoli"];
+  $("recents").innerHTML= arr.length
+    ? `<span class="label" style="width:100%">Repetir</span>`+arr.map((it,i)=>`<button class="chip btnchip" data-rec="${i}">${esc(it.f!==1?nf2.format(it.f)+" × ":"")}${esc(it.n)}</button>`).join("")
+    : `<span class="label" style="width:100%">Prueba con</span>`+ex.map(e=>`<button class="chip btnchip" data-ex="${esc(e)}">${esc(e)}</button>`).join("");
+  $("recents").onclick=e=>{ const b=e.target.closest("button"); if(!b)return;
+    if(b.dataset.rec!=null){ const it=arr[+b.dataset.rec]; PREV.push({n:it.n,q:it.q,f:it.f,b:Object.assign({},it.b),leg:it.leg,pes:it.pes,src:it.src}); renderPreview(); }
+    else { $("inTxt").value=b.dataset.ex; doParse(); } };
+}
+function renderPreview(){
+  const box=$("preview");
+  const fixHtml=PREV_FIX.length?`<p class="small muted">Entendí ${PREV_FIX.map(([a,b])=>`"${esc(b)}" donde escribiste "${esc(a)}"`).join(", ")}.</p>`:"";
+  const unkHtml=PREV_UNK.length?`<div class="unk"><span class="small" style="font-weight:700;color:var(--warn)">No reconocí</span>${PREV_UNK.map((w,i)=>`<button class="chip warn" data-unk="${i}">${esc(w)} · ¿qué es?</button>`).join("")}</div>`:"";
+  if(!PREV.length){ box.innerHTML=(unkHtml||fixHtml||PREV_NOTE)?`<div class="stack">${unkHtml}${fixHtml}${PREV_NOTE?`<p class="small muted">${esc(PREV_NOTE)}</p>`:""}</div>`:""; bindPreview(box); return; }
+  const T=tot(PREV);
+  box.innerHTML=`<div class="preview">
+    <div class="row between"><span class="label">Por agregar a ${esc(mealName($("mealSel").value))}</span><span class="num small"><b>${fk(T.k)} kcal</b> · ${fk(T.p)} g prot</span></div>
+    ${PREV.map((it,i)=>`<div class="pitem">
+      <div class="nm">${esc(it.n)}<div class="small muted" style="font-weight:400">${esc(it.water?"vasos de 250 ml":scaleQ(it.q,it.f))}</div></div>
+      <div class="stepper"><button data-pm="${i}" aria-label="Menos">−</button><span class="num">${nf2.format(it.f)}×</span><button data-pp="${i}" aria-label="Más">+</button></div>
+      <div class="macline num">${it.water?`<span>Suma ${nf1.format(it.f)} ${it.f===1?"vaso":"vasos"} al agua del día</span>`:`<span><b>${fk(it.b.k*it.f)}</b> kcal</span><span class="p">P ${fg(it.b.p*it.f)}</span><span>C ${fg(it.b.c*it.f)}</span><span>G ${fg(it.b.g*it.f)}</span>${it.b.v?`<span class="v">verd ${fp(it.b.v*it.f)}</span>`:""}${it.b.fr?`<span class="f">fruta ${fp(it.b.fr*it.f)}</span>`:""}`}</div>
+      <button class="btn sm ghost" data-px="${i}">Quitar</button>
+    </div>`).join("")}
+    ${unkHtml}${fixHtml}${PREV_NOTE?`<p class="small muted">${esc(PREV_NOTE)}</p>`:""}
+    <div class="row"><button class="btn pri" id="pvAdd">Agregar</button><button class="btn ghost" id="pvCancel">Descartar</button></div>
+  </div>`;
+  bindPreview(box);
+}
+function bindPreview(box){
+  box.onclick=e=>{ const b=e.target.closest("button"); if(!b)return;
+    if(b.dataset.pm!=null){ const it=PREV[+b.dataset.pm]; it.f=Math.max(0.25,round2(it.f-(it.f>1?0.5:0.25))); renderPreview(); }
+    else if(b.dataset.pp!=null){ const it=PREV[+b.dataset.pp]; it.f=round2(it.f+(it.f>=1?0.5:0.25)); renderPreview(); }
+    else if(b.dataset.px!=null){ PREV.splice(+b.dataset.px,1); renderPreview(); }
+    else if(b.dataset.unk!=null) openResolve(+b.dataset.unk);
+    else if(b.id==="pvAdd") commitPreview();
+    else if(b.id==="pvCancel"){ PREV=[]; PREV_NOTE=""; PREV_UNK=[]; PREV_FIX=[]; renderPreview(); } };
+}
+function commitPreview(){
+  const d=ensureDay(CUR), t=$("mealSel").value; let n=0;
+  PREV.forEach(it=>{
+    if(it.water){ d.agua=(d.agua||0)+Math.round(it.f); return; }
+    d.items.push({id:uid(),t,n:it.n,q:it.q,f:it.f,b:it.b,leg:it.leg||0,pes:it.pes||0,src:it.src||"base",ts:Date.now()}); n++;
+    S.freq[it.n]=(S.freq[it.n]||0)+1;
+  });
+  PREV=[]; PREV_NOTE=""; PREV_UNK=[]; PREV_FIX=[]; $("inTxt").value="";
+  touchDay(CUR); render(); toast(n===0?"Agua sumada":n===1?"Agregado":"Agregados "+n+" alimentos");
+}
+function learnFood(it,word){
+  const key=norm(it.n); if(!key) return null;
+  const ex=(S.mis||[]).find(m=>norm(m.n)===key);
+  const rec={id:ex?ex.id:"m"+uid(),n:it.n,al:[key],q:it.q||"1 porción",gr:0,src:"mio",x:{},leg:it.leg||0,pes:it.pes||0,fry:0,cnt:0};
+  FIELDS.forEach(k=>rec[k]=round2((it.b[k]||0)*it.f));
+  if(word){ const w=norm(word); if(w&&!rec.al.includes(w)) rec.al.push(w); }
+  if(ex){ rec.al=[...new Set((ex.al||[]).concat(rec.al))]; Object.assign(ex,rec); } else S.mis.push(rec);
+  ixDirty(); touchPerfil(); return rec;
+}
+function doParse(){
+  const txt=$("inTxt").value.trim(); if(!txt) return;
+  const r=parseText(txt,ix());
+  PREV=PREV.concat(r.items); PREV_UNK=r.unknown; PREV_FIX=r.fixes;
+  PREV_NOTE=r.items.length? (r.unknown.length?"Toca lo que no reconocí para enseñármelo. Lo recordaré la próxima vez.":"Revisa las cantidades con − y + antes de agregar.")
+    : (r.unknown.length?"No reconocí ningún alimento. Toca la palabra para decirme qué es, o usa \"A mano\".":"Escribe qué comiste, por ejemplo \"1 marraqueta con quesillo\".");
+  renderPreview();
+}
+
+/* ---- enseñar una palabra nueva ---- */
+function openResolve(i){
+  const word=PREV_UNK[i]; if(!word) return;
+  const list=q=>(q?suggestFoods(q,ix(),12):suggestFoods(word,ix(),6));
+  const rows=fs=>fs.map(f=>`<button class="food" style="width:100%;text-align:left" data-pick="${esc(f.id)}"><div style="min-width:0"><b>${esc(f.n)}</b><div class="small muted">${esc(f.q)} · ${fk(f.k)} kcal · P ${fg(f.p)} g</div></div><span class="btn sm">Es esto</span></button>`).join("")||`<p class="small muted">Sin coincidencias.</p>`;
+  openSheet(`<h2>¿Qué es "${esc(word)}"?</h2>
+    <p class="small muted">Elige el alimento más parecido. La próxima vez que escribas "${esc(word)}" lo reconozco solo.</p>
+    <input id="rsQ" type="text" placeholder="Buscar en la base" aria-label="Buscar alimento">
+    <div id="rsList">${rows(list(""))}</div>
+    <div class="row"><button class="btn" id="rsManual">No está, lo agrego a mano</button><button class="btn ghost" id="rsSkip">Ignorar esta palabra</button></div>`,
+  e=>{ const b=e.target.closest("button"); if(!b) return;
+    if(b.dataset.pick){ const f=ix().byId[b.dataset.pick]; if(!f) return; S.alias[word]=f.id; ixDirty(); touchPerfil();
+      const bb={}; FIELDS.forEach(k=>bb[k]=f[k]); PREV.push({n:f.n,q:f.q,f:1,b:bb,leg:f.leg,pes:f.pes,src:f.src});
+      PREV_UNK.splice(i,1); closeSheet(); renderPreview(); toast(`Aprendido: "${word}" es ${f.n}`); }
+    if(b.id==="rsManual"){ closeSheet(); openManual(word,()=>{ PREV_UNK.splice(i,1); renderPreview(); }); }
+    if(b.id==="rsSkip"){ PREV_UNK.splice(i,1); closeSheet(); renderPreview(); } });
+  $("rsQ").oninput=e=>{ $("rsList").innerHTML=rows(list(e.target.value.trim())); };
+}
+
+/* ---- planificador y consejos ---- */
+function planCtx(M,T,d){ return {M,T,dayItems:d.items,hour:hourNow(),freq:S.freq,weekLeg:weekCount("leg"),weekPes:weekCount("pes"),seed:fromKey(CUR).getDate(),obj:S.perfil.obj,dow:(new Date().getDay()+6)%7}; }
+function optHtml(o,mi,oi){
+  return `<div class="opt"><ul>${o.comp.map(([f,x])=>`<li>${esc(scaleQ(f.q,x))} <b>${esc(f.n)}</b></li>`).join("")}</ul>
+    <div class="row between"><span class="small num"><b>${fk(o.t.k)}</b> kcal · <span style="color:var(--prot);font-weight:700">${fk(o.t.p)} g prot</span>${o.t.v?` · <span style="color:var(--veg);font-weight:700">verd ${fp(o.t.v)}</span>`:""}</span>
+    <button class="btn sm" data-opt="${mi}:${oi}">Registrar esto</button></div></div>`;
+}
+let PLAN=null;
+function renderPlan(M,T,d){
+  const gk=M.kcal-T.k, gp=M.prot-T.p, gv=M.v-T.v, gf=M.fr-T.fr; const lines=[];
+  if(gk>0) lines.push(`<b class="num">${fk(gk)} kcal</b>`);
+  if(gp>1) lines.push(`<b class="num" style="color:var(--prot)">${fk(gp)} g de proteína</b>`);
+  if(gv>0.25) lines.push(`<b class="num" style="color:var(--veg)">${fp(gv)} ${gv>1?"porciones":"porción"} de verduras</b>`);
+  if(gf>0.25) lines.push(`<b class="num" style="color:var(--fruit)">${fp(gf)} de fruta</b>`);
+  let html= lines.length? `<h2>Te falta</h2><p>${lines.join(", ").replace(/, ([^,]*)$/," y $1")}.</p>`
+    : `<h2>Meta cumplida</h2><p class="muted small">Calorías, proteína, verduras y fruta al día.${T.k-M.kcal>300?" Te pasaste un poco en calorías; mañana se equilibra.":""}</p>`;
+  const ctx=planCtx(M,T,d);
+  if(CUR===TODAY()){
+    coach(ctx).forEach(t=>html+=`<div class="tip">${esc(t)}</div>`);
+    PLAN=planRest(ctx);
+    if(!PLAN.done&&PLAN.meals.length){
+      const m0=PLAN.meals[0];
+      html+=`<div class="plan"><div class="row between"><span class="label">Próxima comida: ${esc(mealName(m0.slot))}</span><span class="small muted num">apunta a ~${fk(m0.tg.k)} kcal y ${fk(m0.tg.p)} g</span></div>
+        ${m0.opts.map((o,oi)=>optHtml(o,0,oi)).join("")}</div>`;
+      if(PLAN.meals.length>1){
+        html+= SHOW_ALL_PLAN? PLAN.meals.slice(1).map((m,mi)=>`<div class="plan"><span class="label">${esc(mealName(m.slot))}</span>${m.opts[0]?optHtml(m.opts[0],mi+1,0):""}</div>`).join("")+`<button class="btn ghost" id="planLess">Ocultar el resto del día</button>`
+          : `<button class="btn ghost" id="planMore">Ver cómo cerrar el día (${PLAN.meals.length-1} ${PLAN.meals.length-1===1?"comida más":"comidas más"})</button>`;
+      }
+    }
+  }
+  html+=`<p class="small muted">Esta semana: legumbres ${ctx.weekLeg} de 2 días · pescado ${ctx.weekPes} de 2 días.</p>`;
+  $("gapCard").innerHTML=html;
+  $("gapCard").onclick=e=>{ const b=e.target.closest("button"); if(!b)return;
+    if(b.dataset.opt){ const [mi,oi]=b.dataset.opt.split(":").map(Number); const m=PLAN.meals[mi], o=m.opts[oi];
+      PREV=PREV.concat(compToItems(o.comp)); $("mealSel").value=m.slot; PREV_NOTE="Ajusta las porciones si comiste otra cantidad."; renderPreview(); $("preview").scrollIntoView({behavior:"smooth",block:"center"}); }
+    if(b.id==="planMore"){ SHOW_ALL_PLAN=true; renderPlan(M,T,d); }
+    if(b.id==="planLess"){ SHOW_ALL_PLAN=false; renderPlan(M,T,d); } };
+}
+
+/* ---- hojas ---- */
+function openSheet(html,onClick){
+  $("sheetHost").innerHTML=`<div class="sheet-bg" id="sbg"><div class="sheet" role="dialog" aria-modal="true">${html}</div></div>`;
+  $("sbg").onclick=e=>{ if(e.target.id==="sbg"){closeSheet();return;} onClick&&onClick(e); };
+}
+function closeSheet(){ $("sheetHost").innerHTML=""; }
+function macroInputs(b,f){ f=f||1;
+  const L=[["k","Calorías (kcal)"],["p","Proteína (g)"],["c","Carbohidratos (g)"],["g","Grasas (g)"],["fi","Fibra (g)"],["v","Verduras (porciones)"],["fr","Frutas (porciones)"],["l","Lácteos (porciones)"]];
+  return `<div class="grid2">${L.map(([k,t])=>`<div class="field"><label for="m_${k}">${t}</label><input id="m_${k}" type="number" inputmode="decimal" step="0.1" min="0" value="${b?round2((b[k]||0)*f):""}"></div>`).join("")}</div>`;
+}
+function readMacros(){ const b={}; FIELDS.forEach(k=>{const v=parseFloat(String($("m_"+k).value).replace(",","."));b[k]=isFinite(v)&&v>=0?v:0;}); return b; }
+function openManual(word,after){
+  openSheet(`<h2>Agregar a mano</h2>
+    <p class="small muted">Si es un envase, copia los valores de la tabla nutricional por porción.</p>
+    <div class="field"><label for="mn">Nombre</label><input id="mn" type="text" value="${esc(word?word.charAt(0).toUpperCase()+word.slice(1):"")}" placeholder="Ej. Pan amasado de la feria"></div>
+    <div class="field"><label for="mq">Porción</label><input id="mq" type="text" placeholder="Ej. 1 unidad (90 g)"></div>
+    ${macroInputs(null)}
+    <label class="row" for="mleg"><input type="checkbox" id="mleg" style="width:20px;height:20px"> Es legumbre</label>
+    <label class="row" for="mpes"><input type="checkbox" id="mpes" style="width:20px;height:20px"> Es pescado o marisco</label>
+    <label class="row" for="msave"><input type="checkbox" id="msave" checked style="width:20px;height:20px"> Recordarlo para la próxima</label>
+    <p class="err" id="merr" hidden></p>
+    <div class="row"><button class="btn pri" id="mok">Agregar a la lista</button><button class="btn ghost" id="mcancel">Cancelar</button></div>`,
+  e=>{ const b=e.target.closest("button"); if(!b)return;
+    if(b.id==="mcancel") closeSheet();
+    if(b.id==="mok"){ const n=$("mn").value.trim(); const m=readMacros();
+      if(!n){ $("merr").textContent="Ponle un nombre."; $("merr").hidden=false; return; }
+      if(!(m.k>0)){ $("merr").textContent="Escribe las calorías. Están en la tabla nutricional del envase."; $("merr").hidden=false; return; }
+      const it={n,q:$("mq").value.trim()||"1 porción",f:1,b:m,leg:$("mleg").checked?1:0,pes:$("mpes").checked?1:0,src:"mio"};
+      if($("msave").checked){ learnFood(it,word); }
+      PREV.push(it); closeSheet(); after&&after(); renderPreview(); } });
+}
+function openEdit(id){
+  const d=day(CUR), it=d.items.find(x=>x.id===id); if(!it) return;
+  openSheet(`<h2>${esc(it.n)}</h2><p class="small muted">${esc(qLabel(it))} · valores del total consumido</p>
+    <div class="field"><label for="en">Nombre</label><input id="en" type="text" value="${esc(it.n)}"></div>
+    <div class="field"><label for="et">Tiempo de comida</label><select id="et">${MEALS.map(([v,t])=>`<option value="${v}"${it.t===v?" selected":""}>${t}</option>`).join("")}</select></div>
+    ${macroInputs(it.b,it.f)}
+    <div class="row"><button class="btn pri" id="eok">Guardar</button><button class="btn ghost" id="emine">Guardar y recordar</button><button class="btn danger" id="edel">Eliminar</button></div>`,
+  e=>{ const b=e.target.closest("button"); if(!b)return;
+    if(b.id==="eok"||b.id==="emine"){ it.n=$("en").value.trim()||it.n; it.t=$("et").value; it.b=readMacros(); it.q=qLabel(it); it.f=1;
+      if(b.id==="emine") learnFood(it); touchDay(CUR); closeSheet(); render(); toast(b.id==="emine"?"Guardado y recordado":"Cambios guardados"); }
+    if(b.id==="edel"){ d.items=d.items.filter(x=>x.id!==id); touchDay(CUR); closeSheet(); render(); toast("Eliminado"); } });
+}
+
+/* ---- historial ---- */
+function renderHist(){
+  const M=metas(), days=[]; for(let i=13;i>=0;i--){ const k=addDays(TODAY(),-i); const d=S.dias[k]; days.push({k,T:tot(d?d.items:[]),n:d?d.items.length:0}); }
+  const W=340,H=170,pl=34,pb=22,pt=10, mx=Math.max(M.kcal*1.25,...days.map(x=>x.T.k))||1;
+  const y=v=>pt+(H-pt-pb)*(1-v/mx), bw=(W-pl-4)/14;
+  const ticks=[0,Math.round(mx/2/100)*100,Math.round(mx/100)*100].filter((v,i,a)=>a.indexOf(v)===i&&v<=mx);
+  $("histChart").innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Calorías de los últimos 14 días">
+    ${ticks.map(v=>`<line x1="${pl}" x2="${W}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${pl-4}" y="${y(v)+4}" text-anchor="end" font-size="9" fill="var(--muted)">${nf0.format(v)}</text>`).join("")}
+    ${days.map((x,i)=>{ const h=Math.max(0,(H-pt-pb)-(y(x.T.k)-pt)); const ok=x.T.k>=M.kcal*0.9&&x.T.k<=M.kcal*1.15;
+      return `<rect x="${pl+i*bw+2}" y="${y(x.T.k)}" width="${bw-4}" height="${h}" rx="3" fill="${x.n?(ok?"var(--accent)":"var(--carb)"):"var(--surface-2)"}"/>
+      <text x="${pl+i*bw+bw/2}" y="${H-8}" text-anchor="middle" font-size="9" fill="var(--muted)">${fromKey(x.k).getDate()}</text>`;}).join("")}
+    <line x1="${pl}" x2="${W}" y1="${y(M.kcal)}" y2="${y(M.kcal)}" stroke="var(--prot)" stroke-width="1.5" stroke-dasharray="4 3"/>
+    <text x="${W-2}" y="${y(M.kcal)-4}" text-anchor="end" font-size="9" font-weight="700" fill="var(--prot)">meta ${nf0.format(M.kcal)}</text></svg>
+    <p class="small muted">Verde: dentro del rango (90% a 115% de la meta). Ámbar: lejos de la meta.</p>`;
+  const reg=days.filter(x=>x.n);
+  const avgK=reg.length?reg.reduce((a,x)=>a+x.T.k,0)/reg.length:0, avgP=reg.length?reg.reduce((a,x)=>a+x.T.p,0)/reg.length:0;
+  const protOk=reg.filter(x=>x.T.p>=M.prot*0.95).length, vegOk=reg.filter(x=>x.T.v>=M.v).length;
+  $("weekStats").innerHTML=[["Promedio diario",fk(avgK)+" kcal",`meta ${fk(M.kcal)}`],["Proteína promedio",fk(avgP)+" g",`meta ${M.prot} g`],["Días con proteína",protOk+" de "+reg.length,"de los días registrados"],["Días con verduras",vegOk+" de "+reg.length,`al menos ${M.v} porciones`]]
+    .map(([a,b,c])=>`<div class="stat"><span class="label">${a}</span><span class="v num">${b}</span><span class="small muted">${c}</span></div>`).join("");
+  const P=(S.pesos||[]).slice().sort((a,b)=>a.f<b.f?-1:1).slice(-30);
+  const dshort=k=>fromKey(k).toLocaleDateString("es-CL",{day:"numeric",month:"short"});
+  $("pesoLbl").textContent=P.length?`${nf1.format(P[P.length-1].kg)} kg el ${dshort(P[P.length-1].f)}`:`perfil: ${nf1.format(S.perfil.peso)} kg`;
+  if(P.length>=2){ const mn=Math.min(...P.map(p=>p.kg))-0.5, mxp=Math.max(...P.map(p=>p.kg))+0.5, Wp=340,Hp=110,l=34;
+    const X=i=>l+(Wp-l-10)*(i/(P.length-1)), Y=v=>8+(Hp-30)*(1-(v-mn)/(mxp-mn)); const pts=P.map((p,i)=>`${X(i)},${Y(p.kg)}`).join(" ");
+    $("pesoChart").innerHTML=`<svg viewBox="0 0 ${Wp} ${Hp}" role="img" aria-label="Evolución del peso">
+      <line x1="${l}" x2="${Wp}" y1="${Y(mn+0.5)}" y2="${Y(mn+0.5)}" stroke="var(--line)"/><text x="${l-4}" y="${Y(mn+0.5)+3}" text-anchor="end" font-size="9" fill="var(--muted)">${nf1.format(mn+0.5)}</text>
+      <line x1="${l}" x2="${Wp}" y1="${Y(mxp-0.5)}" y2="${Y(mxp-0.5)}" stroke="var(--line)"/><text x="${l-4}" y="${Y(mxp-0.5)+3}" text-anchor="end" font-size="9" fill="var(--muted)">${nf1.format(mxp-0.5)}</text>
+      <polygon points="${X(0)},${Hp-22} ${pts} ${X(P.length-1)},${Hp-22}" fill="var(--accent)" opacity=".12"/>
+      <polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>
+      <circle cx="${X(P.length-1)}" cy="${Y(P[P.length-1].kg)}" r="4.5" fill="var(--accent)"/>
+      <text x="${X(0)}" y="${Hp-6}" font-size="9" fill="var(--muted)">${dshort(P[0].f)}</text><text x="${Wp-10}" y="${Hp-6}" text-anchor="end" font-size="9" fill="var(--muted)">${dshort(P[P.length-1].f)}</text></svg>`;
+  } else $("pesoChart").innerHTML=`<p class="small muted">Registra tu peso una vez por semana, en ayunas, para ver la curva.</p>`;
+  const keys=Object.keys(S.dias).filter(k=>S.dias[k].items.length).sort().reverse().slice(0,60);
+  $("dayList").innerHTML=keys.length?keys.map(k=>{ const T=tot(S.dias[k].items);
+    return `<button class="dayrow" data-day="${k}"><b>${esc(dayLabel(k))}</b><span class="num"><b>${fk(T.k)}</b> kcal</span>
+      <span class="small muted num">P ${fk(T.p)} g · verd ${fp(T.v)} · fruta ${fp(T.fr)}</span><span class="small num" style="text-align:right;color:${T.p>=M.prot*0.95?"var(--ok)":"var(--muted)"}">${T.p>=M.prot*0.95?"proteína ✓":"proteína corta"}</span></button>`;}).join("")
+    :`<div class="empty">Cuando registres comidas, aquí aparece cada día con su resumen.</div>`;
+  $("dayList").onclick=e=>{ const b=e.target.closest("[data-day]"); if(!b)return; CUR=b.dataset.day; TAB="hoy"; PREV=[]; render(); window.scrollTo(0,0); };
+}
+
+/* ---- alimentos ---- */
+function renderAlim(){
+  document.querySelectorAll("#fFilter button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.f===FFILTER?"true":"false"));
+  if(FFILTER==="learn"){
+    const ents=Object.entries(S.alias||{});
+    $("foodList").innerHTML=ents.length?ents.map(([w,id])=>{ const f=ix().byId[id]; return `<div class="food"><div><b>"${esc(w)}"</b><div class="small muted">se entiende como ${esc(f?f.n:"(alimento borrado)")}</div></div><button class="btn sm ghost" data-unlearn="${esc(w)}">Olvidar</button></div>`; }).join("")
+      :`<div class="empty">Cuando me enseñes una palabra que no reconocí, aparece aquí.</div>`;
+  } else {
+    const q=norm($("fSearch").value);
+    const src=FFILTER==="mio"?(S.mis||[]):(S.mis||[]).concat(BASE);
+    const list=src.filter(f=>!q||norm(f.n).includes(q)||(f.al||[]).some(a=>a.includes(q))).slice(0,q?80:260);
+    $("foodList").innerHTML=list.map(f=>`<div class="food"><div style="min-width:0"><b>${esc(f.n)}</b> ${f.src==="mio"?`<span class="tag">mío</span>`:""}${f.leg?` <span class="tag">legumbre</span>`:""}${f.pes?` <span class="tag">pescado</span>`:""}
+        <div class="small muted">${esc(f.q)}</div>
+        <div class="macline num"><span><b>${fk(f.k)}</b> kcal</span><span class="p">P ${fg(f.p)}</span><span>C ${fg(f.c)}</span><span>G ${fg(f.g)}</span>${f.v?`<span class="v">verd ${fp(f.v)}</span>`:""}${f.fr?`<span class="f">fruta ${fp(f.fr)}</span>`:""}</div></div>
+        <div class="row" style="flex-wrap:nowrap">${f.src==="mio"?`<button class="btn sm ghost" data-del="${f.id}" aria-label="Quitar ${esc(f.n)}">Quitar</button>`:""}<button class="btn sm" data-add="${f.id}">+ Hoy</button></div></div>`).join("")
+      || `<div class="empty">${FFILTER==="mio"?"Todavía no guardas alimentos propios. Se agregan al usar \"A mano\" o \"Guardar y recordar\".":`No encontré "${esc($("fSearch").value)}". Agrégalo con "A mano" en la pestaña Hoy.`}</div>`;
+  }
+  $("foodList").onclick=e=>{ const b=e.target.closest("button"); if(!b)return;
+    if(b.dataset.add){ const f=ix().byId[b.dataset.add]; if(!f) return; const bb={}; FIELDS.forEach(k=>bb[k]=f[k]);
+      PREV.push({n:f.n,q:f.q,f:1,b:bb,leg:f.leg,pes:f.pes,src:f.src}); CUR=TODAY(); TAB="hoy"; render(); window.scrollTo(0,0); toast("Listo para agregar. Revisa y confirma"); }
+    if(b.dataset.del){ S.mis=S.mis.filter(x=>x.id!==b.dataset.del); Object.keys(S.alias).forEach(w=>{ if(S.alias[w]===b.dataset.del) delete S.alias[w]; }); ixDirty(); touchPerfil(); renderAlim(); }
+    if(b.dataset.unlearn){ delete S.alias[b.dataset.unlearn]; ixDirty(); touchPerfil(); renderAlim(); } };
+}
+
+/* ---- ajustes ---- */
+function renderAjus(){
+  if(!$("aedad")){ $("perfForm").innerHTML=perfilFields(S.perfil,"a"); $("aNombre").value=S.perfil.nombre||""; }
+  const M=metas();
+  $("metaBox").innerHTML=`<div class="grid2">
+      <div class="stat"><span class="label">Gasto en reposo</span><span class="v num">${fk(M.tmb)}</span><span class="small muted">kcal al día</span></div>
+      <div class="stat"><span class="label">Gasto con actividad</span><span class="v num">${fk(M.get)}</span><span class="small muted">kcal al día</span></div>
+      <div class="stat"><span class="label">Meta de calorías</span><span class="v num">${fk(M.kcal)}</span><span class="small muted">${S.perfil.metaKcal>0?"fijada a mano":"calculada"}</span></div>
+      <div class="stat"><span class="label">Meta de proteína</span><span class="v num">${M.prot} g</span><span class="small muted">${S.perfil.metaProt>0?"fijada a mano":`${nf1.format(S.perfil.protKg)} g × ${nf1.format(M.peso)} kg`}</span></div>
+    </div>
+    <p class="small muted num">Carbohidratos ${fk(M.c)} g · Grasas ${fk(M.g)} g · Fibra ${M.fi} g · Verduras ${M.v} y frutas ${M.fr} porciones · Lácteos ${M.l} · Agua 6 a 8 vasos</p>
+    <details><summary>Fijar metas a mano</summary>
+      <div class="grid2" style="margin-top:8px">
+        <div class="field"><label for="aMk">Calorías (vacío = calcular)</label><input id="aMk" type="number" inputmode="numeric" value="${S.perfil.metaKcal>0?S.perfil.metaKcal:""}"></div>
+        <div class="field"><label for="aMp">Proteína g (vacío = calcular)</label><input id="aMp" type="number" inputmode="numeric" value="${S.perfil.metaProt>0?S.perfil.metaProt:""}"></div>
+      </div></details>`;
+  $("bkLast").textContent=S.bkLast?`Último respaldo: ${new Date(S.bkLast).toLocaleDateString("es-CL",{day:"numeric",month:"long"})}.`:"Todavía no haces un respaldo.";
+  $("appUrl").textContent=location.origin+location.pathname.replace(/index\.html$/,"");
+  $("verLbl").textContent="Plato Diario "+VERSION;
+}
+
+/* ---- respaldo (AirDrop, Archivos, WhatsApp) ---- */
+async function exportBk(){
+  const data=JSON.stringify({app:"plato-diario",version:2,exportado:new Date().toISOString(),datos:S});
+  const name="plato-diario-"+slug(S.perfil&&S.perfil.nombre||"respaldo")+"-"+TODAY()+".json";
+  const file=new File([data],name,{type:"application/json"});
+  try{ if(navigator.canShare&&navigator.canShare({files:[file]})){ await navigator.share({files:[file],title:"Respaldo Plato Diario"}); S.bkLast=Date.now(); save(); renderAjus(); toast("Respaldo listo"); return; } }
+  catch(e){ if(e&&e.name==="AbortError"){ toast("Respaldo cancelado"); return; } }
+  try{ const url=URL.createObjectURL(file); const a=document.createElement("a"); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),4000); S.bkLast=Date.now(); save(); renderAjus(); toast("Respaldo descargado"); }
+  catch(e){ toast("No pude crear el archivo de respaldo"); }
+}
+function readBk(file,cb){
+  const r=new FileReader();
+  r.onload=()=>{ try{ const j=JSON.parse(r.result); const D=j&&j.datos?j.datos:j; if(!D||typeof D.dias!=="object") throw 0; cb(null,D); }catch(e){ cb("Ese archivo no es un respaldo de Plato Diario."); } };
+  r.onerror=()=>cb("No pude leer el archivo."); r.readAsText(file);
+}
+function mergeInto(D){
+  Object.entries(D.dias||{}).forEach(([k,d])=>{ const cur=ensureDay(k); const ids=new Set(cur.items.map(i=>i.id));
+    (d.items||[]).forEach(it=>{ if(!ids.has(it.id)) cur.items.push(it); }); cur.agua=Math.max(cur.agua||0,d.agua||0); cur.upd=Date.now(); });
+  (D.mis||[]).forEach(m=>{ if(!S.mis.some(x=>norm(x.n)===norm(m.n))) S.mis.push(m); });
+  Object.assign(S.alias,D.alias||{}); (D.pesos||[]).forEach(p=>{ if(!S.pesos.some(x=>x.f===p.f)) S.pesos.push(p); });
+}
+function importBk(file,box,fromSetup){
+  readBk(file,(err,D)=>{
+    if(err){ box.innerHTML=`<p class="err">${esc(err)}</p>`; return; }
+    const nd=Object.keys(D.dias).length, who=D.perfil&&D.perfil.nombre?` de ${esc(D.perfil.nombre)}`:"";
+    box.innerHTML=`<p class="small">Respaldo${who} con ${nd} ${nd===1?"día":"días"} registrados.${fromSetup?" Se restaura con su perfil y su PIN.":""}</p>
+      <div class="row"><button class="btn pri" data-bk="replace">${fromSetup?"Restaurar":"Reemplazar todo"}</button>${fromSetup?"":`<button class="btn" data-bk="merge">Unir con lo actual</button>`}<button class="btn ghost" data-bk="no">Cancelar</button></div>`;
+    box.onclick=e=>{ const b=e.target.closest("[data-bk]"); if(!b) return;
+      if(b.dataset.bk==="no"){ box.innerHTML=""; return; }
+      if(b.dataset.bk==="replace"){ S=migrate(D); S.upd=Date.now(); }
+      else mergeInto(D);
+      ixDirty(); save(); box.innerHTML=""; $("perfForm").innerHTML=""; if(fromSetup) ssSet("pd-ok","");
+      if(S.pin&&ssGet("pd-ok")!=="1") showLock(); render(); toast("Respaldo restaurado"); };
+  });
+}
+
+/* ---- instalación ---- */
+const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+const isStandalone=()=>window.navigator.standalone===true||(window.matchMedia&&matchMedia("(display-mode: standalone)").matches);
+function showInstallTip(){ return isIOS&&!isStandalone()&&ssGet("pd-noinst")!=="1"; }
+if("serviceWorker" in navigator && location.protocol==="https:"){
+  navigator.serviceWorker.register("sw.js").then(reg=>{
+    reg.addEventListener("updatefound",()=>{ const nw=reg.installing; if(!nw) return;
+      nw.addEventListener("statechange",()=>{ if(nw.state==="installed"&&navigator.serviceWorker.controller){
+        $("updHost").innerHTML=`<button class="update" id="updGo">Hay una versión nueva. Toca para actualizar</button>`;
+        $("updGo").onclick=()=>{ nw.postMessage("skip"); }; } }); });
+  }).catch(()=>{});
+  let reloaded=false; navigator.serviceWorker.addEventListener("controllerchange",()=>{ if(reloaded) return; reloaded=true; location.reload(); });
+}
+
+/* ====================== EVENTOS ====================== */
+document.querySelector(".tabs").onclick=e=>{ const b=e.target.closest("[data-tab]"); if(!b)return; TAB=b.dataset.tab; if(TAB==="ajus") $("perfForm").innerHTML=""; render(); window.scrollTo(0,0); };
+$("dPrev").onclick=()=>{ CUR=addDays(CUR,-1); PREV=[]; PREV_UNK=[]; PREV_FIX=[]; PREV_NOTE=""; render(); };
+$("dNext").onclick=()=>{ if(CUR<TODAY()){ CUR=addDays(CUR,1); PREV=[]; PREV_UNK=[]; PREV_FIX=[]; PREV_NOTE=""; render(); } };
+$("btnParse").onclick=doParse;
+$("inTxt").addEventListener("keydown",e=>{ if(e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); doParse(); } });
+$("btnManual").onclick=()=>openManual("");
+$("mealSel").onchange=renderPreview;
+$("meals").onclick=e=>{ const b=e.target.closest("[data-edit]"); if(b) openEdit(b.dataset.edit); };
+$("aPlus").onclick=()=>{ const d=ensureDay(CUR); d.agua=(d.agua||0)+1; touchDay(CUR); renderHoy(); };
+$("aMinus").onclick=()=>{ const d=ensureDay(CUR); d.agua=Math.max(0,(d.agua||0)-1); touchDay(CUR); renderHoy(); };
+$("installX").onclick=()=>{ ssSet("pd-noinst","1"); $("installTip").hidden=true; };
+$("fSearch").oninput=()=>{ if(FFILTER==="learn") FFILTER="all"; renderAlim(); };
+$("fFilter").onclick=e=>{ const b=e.target.closest("[data-f]"); if(!b)return; FFILTER=b.dataset.f; renderAlim(); };
+$("pesoGo").onclick=()=>{ const v=parseFloat(String($("pesoIn").value).replace(",",".")); if(!(v>=30&&v<=250)){toast("Escribe tu peso en kilos, por ejemplo 65,4");return;}
+  S.pesos=(S.pesos||[]).filter(p=>p.f!==TODAY()); S.pesos.push({f:TODAY(),kg:v}); S.perfil.peso=v; touchPerfil(); $("pesoIn").value=""; renderHist(); toast("Peso registrado, meta recalculada"); };
+$("perfSave").onclick=()=>{ const p=readPerfil("a",S.perfil); if(typeof p==="string"){toast(p);return;}
+  const mk=+$("aMk").value, mp=+$("aMp").value; p.metaKcal=mk>=1000&&mk<=6000?mk:0; p.metaProt=mp>=20&&mp<=400?mp:0; p.nombre=$("aNombre").value.trim().slice(0,40);
+  S.perfil=p; touchPerfil(); render(); toast("Perfil guardado"); };
+$("pinSave").onclick=async()=>{ const o=$("pOld").value.trim(), n=$("pNew").value.trim(), m=$("pinMsg");
+  if(await hashPin(o)!==S.pin){ m.textContent="El PIN actual no coincide."; m.className="small err"; m.hidden=false; return; }
+  if(!/^\d{4,8}$/.test(n)){ m.textContent="El PIN nuevo debe tener entre 4 y 8 dígitos."; m.className="small err"; m.hidden=false; return; }
+  S.pin=await hashPin(n); touchPerfil(); $("pOld").value=""; $("pNew").value=""; m.textContent="PIN cambiado."; m.className="small"; m.hidden=false; };
+$("bkOut").onclick=exportBk;
+$("bkIn").onchange=e=>{ if(e.target.files[0]) importBk(e.target.files[0],$("bkBox"),false); e.target.value=""; };
+$("setupBk").onchange=e=>{ if(e.target.files[0]) importBk(e.target.files[0],$("setupBkBox"),true); e.target.value=""; };
+function wipeUI(box,onCancel){
+  box.innerHTML=`<p class="small">Se borra tu perfil, tus días y tus alimentos de este teléfono. Si no tienes respaldo, no se pueden recuperar. Escribe BORRAR para confirmar.</p>
+    <input id="wipeTxt" type="text" autocomplete="off" aria-label="Escribe BORRAR"><div class="row"><button class="btn danger" id="wipe2">Borrar definitivamente</button><button class="btn ghost" id="wipeNo">Cancelar</button></div>`;
+  $("wipeNo").onclick=onCancel;
+  $("wipe2").onclick=()=>{ if($("wipeTxt").value.trim().toUpperCase()!=="BORRAR"){toast("Escribe BORRAR para confirmar");return;}
+    S=blank(); save(); ssSet("pd-ok",""); location.reload(); };
+}
+function wipeStart(){ wipeUI($("wipeBox"),()=>{ $("wipeBox").innerHTML=`<button class="btn danger" id="wipe1">Borrar todos mis datos</button>`; $("wipe1").onclick=wipeStart; }); }
+$("wipe1").onclick=wipeStart;
+$("lockForgot").onclick=()=>{ const box=$("forgotBox");
+  box.innerHTML=`<div class="stack" style="text-align:left"><p class="small">El PIN no se puede recuperar porque nada sale de este teléfono. Tienes dos caminos: restaurar un respaldo (vuelve con el PIN que tenía ese respaldo) o borrar todo y empezar de nuevo.</p>
+    <label class="btn photo-label">Restaurar un respaldo<input type="file" id="forgotBk" accept="application/json,.json"></label><button class="btn danger" id="forgotWipe">Borrar todo</button><div id="forgotBkBox"></div></div>`;
+  $("forgotBk").onchange=e=>{ if(e.target.files[0]){ readBk(e.target.files[0],(err,D)=>{ if(err){ $("forgotBkBox").innerHTML=`<p class="err">${esc(err)}</p>`; return; } S=migrate(D); ixDirty(); save(); $("forgotBkBox").innerHTML=`<p class="small">Respaldo restaurado. Entra con el PIN de ese respaldo.</p>`; }); } e.target.value=""; };
+  $("forgotWipe").onclick=()=>wipeUI($("forgotBkBox"),()=>{ $("forgotBkBox").innerHTML=""; }); };
+$("setupGo").onclick=async()=>{
+  const p=readPerfil("s",null), err=$("setupErr");
+  if(typeof p==="string"){ err.textContent=p; err.hidden=false; return; }
+  p.nombre=$("sNombre").value.trim().slice(0,40);
+  if(!p.nombre){ err.textContent="Escribe tu nombre."; err.hidden=false; return; }
+  const a=$("sPin").value.trim(), b=$("sPin2").value.trim();
+  if(!/^\d{4,8}$/.test(a)){ err.textContent="El PIN debe tener entre 4 y 8 dígitos."; err.hidden=false; return; }
+  if(a!==b){ err.textContent="Los dos PIN no coinciden."; err.hidden=false; return; }
+  p.metaKcal=0; p.metaProt=0; S.perfil=p; S.pin=await hashPin(a); S.pesos=[{f:TODAY(),kg:p.peso}];
+  ssSet("pd-ok","1"); touchPerfil(); render(); toast("Listo, "+p.nombre+". Registra tu primera comida");
+};
+$("lockGo").onclick=tryUnlock;
+$("lockIn").addEventListener("keydown",e=>{ if(e.key==="Enter") tryUnlock(); });
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="hidden") ssSet("pd-hid",String(Date.now()));
+  else { const h=+ssGet("pd-hid")||0; if(S.pin&&h&&Date.now()-h>10*60*1000){ ssSet("pd-ok",""); showLock(); }
+    if(CUR!==TODAY()&&render.lastDay&&CUR===render.lastDay){ CUR=TODAY(); } render.lastDay=TODAY(); if(!$("lock").hidden) return; render(); } });
+
+/* ====================== ARRANQUE ====================== */
+render.lastDay=TODAY();
+if(S.pin && ssGet("pd-ok")!=="1") showLock();
+render();
+
+</script>
+</body>
+</html>

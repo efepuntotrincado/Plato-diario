@@ -1,0 +1,189 @@
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><span class="dot" aria-hidden="true"></span><h1>Plato Diario</h1></div>
+    <div class="sync" id="hello"></div>
+  </header>
+
+  <!-- PRIMER USO -->
+  <section id="vSetup" class="stack" hidden>
+    <div class="card stack">
+      <h2>Armemos tu meta</h2>
+      <p class="muted small">Cada teléfono guarda su propio registro. Con estos datos calculo tu gasto diario con la ecuación de Mifflin-St Jeor y le sumo o resto según tu objetivo. Todo se puede cambiar después en Ajustes.</p>
+      <div class="field"><label for="sNombre">Tu nombre</label><input id="sNombre" type="text" autocomplete="given-name" placeholder="Ej. Felipe"></div>
+      <div id="setupForm"></div>
+      <div class="grid2">
+        <div class="field"><label for="sPin">Crea un PIN (4 a 8 dígitos)</label><input id="sPin" type="password" inputmode="numeric" autocomplete="new-password" maxlength="8"></div>
+        <div class="field"><label for="sPin2">Repite el PIN</label><input id="sPin2" type="password" inputmode="numeric" autocomplete="new-password" maxlength="8"></div>
+      </div>
+      <p id="setupErr" class="err" hidden></p>
+      <button class="btn pri" id="setupGo">Empezar a registrar</button>
+      <label class="btn ghost photo-label">Ya tengo un respaldo<input type="file" id="setupBk" accept="application/json,.json"></label>
+      <div id="setupBkBox"></div>
+    </div>
+  </section>
+
+  <!-- HOY -->
+  <section id="vHoy" class="stack" hidden>
+    <div class="install" id="installTip" hidden>
+      <div>Para instalarla, toca <b>Compartir</b> en Safari y luego <b>Añadir a pantalla de inicio</b>. Así se abre como app y funciona sin internet.</div>
+      <button class="iconbtn" id="installX" aria-label="Cerrar aviso">×</button>
+    </div>
+    <div class="daynav">
+      <button class="iconbtn" id="dPrev" aria-label="Día anterior">‹</button>
+      <div class="d" id="dLbl"></div>
+      <button class="iconbtn" id="dNext" aria-label="Día siguiente">›</button>
+    </div>
+
+    <div class="card">
+      <div class="hero">
+        <div class="ring" id="ring"></div>
+        <div class="macros" id="macros"></div>
+      </div>
+    </div>
+
+    <div class="chips" id="balance" aria-label="Balance del día"></div>
+
+    <div class="card stack composer">
+      <div class="row between">
+        <h2>¿Qué comiste?</h2>
+        <select id="mealSel" aria-label="Tiempo de comida" style="width:auto;min-height:36px;padding:4px 10px"></select>
+      </div>
+      <textarea id="inTxt" placeholder="Ej. 2 huevos revueltos en agua y un pan ciabatta con palta" autocapitalize="sentences"></textarea>
+      <div class="row">
+        <button class="btn pri" id="btnParse">Calcular</button>
+        <button class="btn ghost" id="btnManual">A mano</button>
+      </div>
+      <div class="examples" id="recents"></div>
+      <div id="preview"></div>
+    </div>
+
+    <div class="card gap" id="gapCard"></div>
+
+    <div class="card stack">
+      <div class="row between"><h2>Agua</h2><span class="small muted num" id="aguaLbl"></span></div>
+      <div class="water">
+        <button class="iconbtn" id="aMinus" aria-label="Quitar un vaso">−</button>
+        <div class="glasses" id="glasses"></div>
+        <button class="iconbtn" id="aPlus" aria-label="Sumar un vaso">+</button>
+      </div>
+    </div>
+
+    <div class="stack" id="meals"></div>
+  </section>
+
+  <!-- HISTORIAL -->
+  <section id="vHist" class="stack" hidden>
+    <div class="card stack">
+      <div class="row between"><h2>Últimos 14 días</h2><span class="small muted">calorías vs meta</span></div>
+      <div class="chart" id="histChart"></div>
+    </div>
+    <div class="grid2" id="weekStats"></div>
+    <div class="card stack">
+      <div class="row between"><h2>Peso</h2><span class="small muted" id="pesoLbl"></span></div>
+      <div class="chart" id="pesoChart"></div>
+      <div class="row" style="flex-wrap:nowrap">
+        <input id="pesoIn" type="number" inputmode="decimal" step="0.1" min="30" max="250" placeholder="kg de hoy" aria-label="Peso de hoy en kilos">
+        <button class="btn pri" id="pesoGo">Registrar</button>
+      </div>
+      <p class="note">Tu peso más reciente reemplaza el del perfil y la meta se recalcula sola.</p>
+    </div>
+    <div class="card">
+      <h2 style="margin-bottom:6px">Días</h2>
+      <div id="dayList"></div>
+    </div>
+  </section>
+
+  <!-- ALIMENTOS -->
+  <section id="vAlim" class="stack" hidden>
+    <div class="card stack">
+      <h2>Alimentos</h2>
+      <p class="small muted">Porciones típicas chilenas. Lo que agregas a mano o corriges queda como tuyo y la app lo reconoce la próxima vez que lo escribas.</p>
+      <input id="fSearch" type="text" placeholder="Buscar: marraqueta, pechuga, brócoli…" aria-label="Buscar alimento">
+      <div class="seg" id="fFilter">
+        <button data-f="all" aria-pressed="true">Todos</button><button data-f="mio" aria-pressed="false">Míos</button><button data-f="learn" aria-pressed="false">Palabras aprendidas</button>
+      </div>
+      <div id="foodList"></div>
+    </div>
+  </section>
+
+  <!-- AJUSTES -->
+  <section id="vAjus" class="stack" hidden>
+    <div class="card stack">
+      <h2>Perfil y meta</h2>
+      <div class="field"><label for="aNombre">Nombre</label><input id="aNombre" type="text"></div>
+      <div id="perfForm"></div>
+      <div id="metaBox" class="stack"></div>
+      <button class="btn pri" id="perfSave">Guardar perfil</button>
+    </div>
+    <div class="card stack">
+      <h2>PIN</h2>
+      <div class="grid2">
+        <div class="field"><label for="pOld">PIN actual</label><input id="pOld" type="password" inputmode="numeric" maxlength="8"></div>
+        <div class="field"><label for="pNew">PIN nuevo</label><input id="pNew" type="password" inputmode="numeric" maxlength="8"></div>
+      </div>
+      <button class="btn" id="pinSave">Cambiar PIN</button>
+      <p id="pinMsg" class="small" hidden></p>
+    </div>
+    <div class="card stack">
+      <h2>Respaldo</h2>
+      <p class="small muted">Tus datos viven solo en este teléfono. Haz un respaldo cada cierto tiempo y guárdalo en Archivos o mándatelo por AirDrop o WhatsApp.</p>
+      <div class="row">
+        <button class="btn" id="bkOut">Guardar respaldo</button>
+        <label class="btn ghost photo-label">Restaurar respaldo<input type="file" id="bkIn" accept="application/json,.json"></label>
+      </div>
+      <p class="small muted" id="bkLast"></p>
+      <div id="bkBox"></div>
+    </div>
+    <div class="card stack">
+      <h2>Instalar en otro iPhone</h2>
+      <ol class="small" style="margin:0;padding-left:20px">
+        <li>Abre en Safari la dirección <b id="appUrl"></b></li>
+        <li>Toca Compartir y luego "Añadir a pantalla de inicio".</li>
+        <li>Ábrela desde el ícono y crea el perfil y el PIN de esa persona.</li>
+      </ol>
+      <p class="small muted">Cada teléfono lleva su propio registro y su propio PIN.</p>
+    </div>
+    <div class="card stack">
+      <h2>De dónde salen las metas</h2>
+      <div class="small stack">
+        <p><b>Calorías.</b> Gasto en reposo por Mifflin-St Jeor por el factor de actividad. Para subir de peso se suman entre 250 y 500 kcal y para bajar se restan.</p>
+        <p><b>Proteína.</b> 1,6 a 2,2 g por kilo de peso al día cuando la idea es ganar masa. Por defecto uso 1,8 g/kg.</p>
+        <p><b>Grasas y carbohidratos.</b> Grasas al 28% de las calorías y el resto, carbohidratos.</p>
+        <p><b>Balance.</b> Guías Alimentarias para la Población Chilena (Ministerio de Salud, 2013): 5 porciones de verduras y frutas de distintos colores cada día, 3 porciones de lácteos bajos en grasa, legumbres al menos 2 veces por semana, pescado al menos 2 veces por semana y 6 a 8 vasos de agua.</p>
+        <p><b>Fibra.</b> 14 g por cada 1.000 kcal, con un mínimo de 25 g.</p>
+        <p><b>Etiquetas.</b> Para productos envasados, revisa la tabla nutricional que exige el Reglamento Sanitario de los Alimentos (DS 977/96) y los sellos "ALTO EN" de la Ley 20.606 y su reglamento (DS 13/2015). Entre dos productos parecidos, prefiere el que tiene menos sellos.</p>
+        <p><b>Cómo calcula.</b> Todo se calcula dentro del teléfono, sin internet. Los valores son aproximados por porción típica y sirven para orientarte. No reemplazan la indicación de un nutricionista.</p>
+      </div>
+    </div>
+    <div class="card stack">
+      <h2>Borrar todo</h2>
+      <div id="wipeBox"><button class="btn danger" id="wipe1">Borrar todos mis datos</button></div>
+      <p class="small muted" id="verLbl"></p>
+    </div>
+  </section>
+</div>
+
+<nav class="tabs" aria-label="Secciones">
+  <div class="in">
+    <button data-tab="hoy" aria-current="page"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>Hoy</button>
+    <button data-tab="hist"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Historial</button>
+    <button data-tab="alim"><svg viewBox="0 0 24 24"><path d="M3 11h18a9 9 0 0 1-18 0zM12 3c0 3 3 3 3 6M8 5c0 2 2 2 2 4"/></svg>Alimentos</button>
+    <button data-tab="ajus"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg>Ajustes</button>
+  </div>
+</nav>
+
+<div id="lock" class="lock" hidden>
+  <div class="box">
+    <div class="brand" style="justify-content:center"><span class="dot" aria-hidden="true"></span><h1>Plato Diario</h1></div>
+    <p class="muted" id="lockHello">Ingresa tu PIN</p>
+    <input id="lockIn" class="pinput" type="password" inputmode="numeric" autocomplete="current-password" maxlength="8" aria-label="PIN">
+    <button class="btn pri" id="lockGo">Entrar</button>
+    <p id="lockErr" class="err" hidden>PIN incorrecto</p>
+    <button class="linkbtn" id="lockForgot">Olvidé mi PIN</button>
+    <div id="forgotBox"></div>
+  </div>
+</div>
+
+<div id="sheetHost"></div>
+<div id="toastHost"></div>
+<div id="updHost"></div>

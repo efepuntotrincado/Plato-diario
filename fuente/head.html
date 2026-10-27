@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="es-CL">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Plato Diario</title>
+<meta name="description" content="Registro diario de comidas, calorías y proteína, con balance según las Guías Alimentarias chilenas.">
+<meta name="theme-color" content="#f2f5ef" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e1310" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Plato Diario">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+html{-webkit-tap-highlight-color:transparent}
+body{margin:0}
+:root{padding-top:env(safe-area-inset-top,0px)}
+img{max-width:100%}
+/*CSS_OLD*/
+/* agregados v2 */
+.install{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:var(--r);background:var(--accent-soft);color:var(--ink);font-size:.9rem}
+.install b{color:var(--accent)}
+.install button{margin-left:auto;flex:none}
+.unk{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chip.warn{background:transparent;border:1px dashed var(--warn);color:var(--warn)}
+.plan{display:flex;flex-direction:column;gap:8px}
+.opt{padding:12px;border-radius:12px;background:var(--surface-2);display:flex;flex-direction:column;gap:6px}
+.opt ul{margin:0;padding-left:18px;font-size:.92rem}
+.opt li{margin:1px 0}
+.tip{font-size:.9rem;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface)}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{min-height:34px;padding:0 12px;border-radius:999px;border:1px solid var(--line);font-weight:700;font-size:.86rem}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.update{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 8px);transform:translateX(-50%);z-index:45;background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:10px 16px;font-weight:700;box-shadow:0 4px 18px rgba(0,0,0,.2)}
+.linkbtn{color:var(--accent);font-weight:700;text-decoration:underline;padding:6px}
+</style>
+</head>
+<body>
