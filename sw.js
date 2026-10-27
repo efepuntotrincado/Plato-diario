@@ -1,5 +1,5 @@
 /* Plato Diario · funciona sin internet */
-const CACHE="plato-diario-7cdbe1983c";
+const CACHE="plato-diario-647512f91a";
 const SHELL=["./","./index.html","./manifest.json","./icon-180.png","./icon-192.png","./icon-512.png"];
 self.addEventListener("install",e=>{ e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL))); });
 self.addEventListener("activate",e=>{ e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k.startsWith("plato-diario-")&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())); });

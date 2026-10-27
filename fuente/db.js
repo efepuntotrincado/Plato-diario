@@ -69,7 +69,7 @@ Zapallo italiano|zapallo italiano,zucchini|1 unidad (200 g)|200|34|2.4|6.2|0.6|2
 Zapallo|zapallo,zapallo camote|1 taza cocido (200 g)|200|80|1.8|20|0.2|5|1|0|0|
 Espinaca|espinaca|1 taza cocida (180 g)|180|41|5.3|6.8|0.5|4.3|2|0|0|sV
 Acelga|acelga|1 taza cocida (175 g)|175|35|3.3|7|0.1|3.7|2|0|0|
-Betarraga|betarraga|1/2 taza (85 g)|85|37|1.4|8.5|0.2|1.7|1|0|0|
+Betarraga|betarraga,ensalada de betarraga|1/2 taza (85 g)|85|37|1.4|8.5|0.2|1.7|1|0|0|
 Pepino|pepino,ensalada de pepino|1 taza (120 g)|120|18|0.8|4.3|0.1|0.6|1|0|0|sV
 Porotos verdes|porotos verdes,vainitas|1 taza cocida (125 g)|125|44|2.4|10|0.3|4|2|0|0|sV
 Pimentón|pimenton|1/2 unidad (80 g)|80|22|0.8|4.8|0.2|1.7|1|0|0|
@@ -79,17 +79,18 @@ Repollo|repollo,ensalada de repollo|1 taza (90 g)|90|22|1.1|5|0.1|2.3|1|0|0|
 Apio|apio|1 taza (100 g)|100|16|0.7|3|0.2|1.6|1|0|0|
 Verduras salteadas|verduras salteadas,salteado de verduras,wok de verduras,verduras al vapor,verduras|1 taza (150 g)|150|90|3|10|4.5|3.5|1.5|0|0|sV
 Palta|palta,aguacate|1/4 de palta (40 g)|40|64|0.8|3.4|5.9|2.7|0|0|0|cnt4
-Manzana|manzana|1 unidad (150 g)|150|78|0.4|21|0.3|3.6|0|1|0|sF
-Plátano|platano,banana|1 unidad (120 g)|120|107|1.3|27|0.4|3.1|0|1|0|sF
+Manzana|manzana,manzana verde,manzana roja|1 unidad (150 g)|150|78|0.4|21|0.3|3.6|0|1|0|sF
+Plátano|platano,banana,banano|1 unidad (120 g)|120|107|1.3|27|0.4|3.1|0|1|0|sF
 Naranja|naranja|1 unidad (150 g)|150|71|1.4|18|0.2|3.6|0|1|0|sF
 Mandarina|mandarina,clementina|1 unidad (80 g)|80|43|0.7|11|0.2|1.4|0|0.5|0|
 Pera|pera|1 unidad (170 g)|170|97|0.6|26|0.2|5.3|0|1|0|sF
-Kiwi|kiwi|1 unidad (75 g)|75|46|0.9|11|0.4|2.3|0|1|0|sF
+Kiwi|kiwi,kiwi gold|1 unidad (75 g)|75|46|0.9|11|0.4|2.3|0|1|0|sF
 Frutillas|frutillas,frutilla|1 taza (150 g)|150|48|1|11.5|0.5|3|0|1|0|sF
-Uvas|uvas,uva|1 taza (150 g)|150|104|1.1|27|0.2|1.4|0|1|0|
+Uvas|uvas,uva,uva verde,uva morada|1 taza (150 g)|150|104|1.1|27|0.2|1.4|0|1|0|
 Durazno|durazno,nectarin|1 unidad (150 g)|150|59|1.4|14|0.4|2.3|0|1|0|
 Arándanos|arandanos,arandano|1 taza (140 g)|140|80|1|20|0.5|3.4|0|1|0|sF
-Sandía o melón|sandia,melon|1 taza (160 g)|160|50|1|12.5|0.2|0.7|0|1|0|
+Sandía|sandia|1 taza (150 g)|150|46|0.9|11.5|0.2|0.6|0|1|0|
+Melón|melon,melon calameno,melon tuna|1 taza (160 g)|160|54|1.3|13|0.3|1.4|0|1|0|
 Jugo natural|jugo,jugo natural,jugo de naranja|1 vaso (200 ml)|200|90|1.4|21|0.4|0.4|0|0|0|
 Jugo en caja o néctar|jugo en caja,nectar|1 vaso (200 ml)|200|90|0|22|0|0|0|0|0|
 Nueces|nueces,nuez|1 puñado (30 g)|30|196|4.6|4.1|19.5|2|0|0|0|sC
@@ -223,4 +224,32 @@ Chía|chia|1 cucharada (12 g)|12|58|2|5|3.7|4.1|0|0|0|
 Linaza|linaza|1 cucharada (10 g)|10|53|1.8|2.9|4.2|2.7|0|0|0|
 Aceitunas|aceitunas,aceituna|5 unidades (20 g)|20|30|0.2|0.8|3|0.6|0|0|0|
 Salsa de tomate|salsa de tomate,salsa pomarola,pomarola|1/2 taza (125 g)|125|45|1.5|9|0.4|2|0.5|0|0|
+Frambuesas|frambuesa,frambuesas|1 taza (125 g)|125|65|1.5|15|0.8|8|0|1|0|
+Moras|mora,moras,zarzamora|1 taza (145 g)|145|62|2|14|0.7|7.6|0|1|0|
+Mix de berries|berries,mix de berries,frutos rojos,berries congelados|1 taza (140 g)|140|70|1.2|16|0.5|5.5|0|1|0|
+Calafate|calafate|1/2 taza (50 g)|50|40|0.6|9|0.3|3|0|0.5|0|
+Maqui|maqui|1/2 taza (50 g)|50|40|0.6|9|0.4|3|0|0.5|0|
+Murta|murta,murtilla,uñi|1/2 taza (50 g)|50|40|0.4|9|0.3|3|0|0.5|0|
+Membrillo|membrillo|1 unidad (150 g)|150|86|0.6|23|0.2|2.9|0|1|0|
+Dulce de membrillo|dulce de membrillo|1 trozo (30 g)|30|80|0.1|20|0|0.5|0|0|0|
+Granada|granada|1/2 unidad (140 g)|140|116|2.3|26|1.6|5.6|0|1|0|
+Higos|higo,higos,breva,brevas|2 unidades (100 g)|100|74|0.8|19|0.3|2.9|0|1|0|
+Caqui|caqui,kaki|1 unidad (170 g)|170|119|1|31|0.3|6|0|1|0|
+Maracuyá|maracuya,fruta de la pasion|2 unidades (40 g de pulpa)|40|39|0.9|9|0.3|4|0|0.5|0|
+Nísperos|nispero,nisperos|4 unidades (120 g)|120|56|0.5|14|0.2|2|0|1|0|
+Lúcuma|lucuma|1/2 taza (100 g)|100|99|1.5|25|0.5|1.3|0|1|0|
+Pepino dulce|pepino dulce|1 unidad (150 g)|150|33|0.6|8|0.1|1.5|0|1|0|
+Limón|limon,jugo de limon|1 unidad (60 g)|60|17|0.6|5.4|0.2|1.6|0|0|0|
+Coco rallado|coco,coco rallado|2 cucharadas (15 g)|15|54|0.5|2.3|5|1.4|0|0|0|
+Dátiles|datil,datiles|3 unidades (24 g)|24|67|0.6|18|0|1.9|0|0|0|
+Ciruelas secas|ciruelas secas,ciruela seca,ciruela deshidratada|4 unidades (40 g)|40|96|0.9|25|0.2|2.8|0|0.5|0|
+Huesillos|huesillo,huesillos|2 unidades (30 g)|30|72|1|19|0.2|2.5|0|0.5|0|
+Fruta deshidratada|damascos secos,orejones,fruta deshidratada,fruta seca|1/4 taza (40 g)|40|96|1.4|25|0.2|2.9|0|0.5|0|
+Duraznos en conserva|durazno en conserva,duraznos en conserva,duraznos en almibar,conserva de durazno|2 mitades con jugo (120 g)|120|65|0.5|17|0|1.3|0|0.5|0|
+Compota de manzana|compota,compota de manzana,pure de manzana|1 unidad (100 g)|100|68|0.2|17|0.1|1.2|0|0.5|0|
+Rabanitos|rabanito,rabanitos,rabano|1/2 taza (60 g)|60|10|0.4|2|0.1|1|0.5|0|0|
+Puerro|puerro,puerros|1/2 taza cocido (50 g)|50|16|0.4|4|0.1|0.5|0.5|0|0|
+Kale|kale,col rizada|1 taza cruda (20 g)|20|10|0.9|1|0.3|0.8|0.5|0|0|
+Repollitos de Bruselas|repollitos de bruselas,coles de bruselas,repollito de bruselas|1 taza cocida (155 g)|155|56|4|11|0.8|4|2|0|0|
+Pepinillos|pepinillos,pepinillo|3 unidades (45 g)|45|5|0.2|1|0.1|0.5|0.25|0|0|
 `;

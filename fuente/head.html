@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Plato Diario</title>
 <meta name="description" content="Registro diario de comidas, calorías y proteína, con balance según las Guías Alimentarias chilenas.">
-<meta name="theme-color" content="#f2f5ef" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0e1310" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#ffffff">
+<meta name="color-scheme" content="light only">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Plato Diario">
@@ -39,6 +39,24 @@ img{max-width:100%}
 .seg button{min-height:34px;padding:0 12px;border-radius:999px;border:1px solid var(--line);font-weight:700;font-size:.86rem}
 .seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .update{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 8px);transform:translateX(-50%);z-index:45;background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:10px 16px;font-weight:700;box-shadow:0 4px 18px rgba(0,0,0,.2)}
+.sellos{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.sello{display:inline-flex;align-items:center;justify-content:center;text-align:center;width:46px;height:46px;background:#111;color:#fff;font-size:.5rem;line-height:1.05;font-weight:800;letter-spacing:.01em;clip-path:polygon(30% 0,70% 0,100% 30%,100% 70%,70% 100%,30% 100%,0 70%,0 30%);padding:4px;outline:1px solid var(--line)}
+.altsel{margin-top:6px;min-height:34px!important;padding:4px 8px!important;font-size:.85rem;width:100%}
+.pan{display:flex;flex-direction:column}
+.prow{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.prow:last-child{border-bottom:0}
+.prow .nm{font-weight:700;min-width:0;overflow-wrap:anywhere}
+.st{min-height:30px;padding:0 10px;border-radius:999px;font-size:.78rem;font-weight:700;border:1px solid var(--line);background:var(--surface)}
+.st.hay{background:var(--accent-soft);color:var(--ok);border-color:transparent}
+.st.poco{background:#fdf1e4;color:var(--warn);border-color:transparent}
+.chk{width:24px;height:24px;accent-color:var(--accent)}
+.prow.done .nm{text-decoration:line-through;color:var(--muted)}
+.xbtn{width:34px;height:34px;border-radius:999px;background:var(--surface-2);font-weight:800;color:var(--muted)}
+.dayplan{display:flex;flex-direction:column;gap:6px}
+.dayplan .ml{display:grid;grid-template-columns:84px 1fr;gap:8px;font-size:.9rem;padding:6px 0;border-top:1px solid var(--line)}
+.dayplan .ml:first-of-type{border-top:0}
+.have{color:var(--ok);font-weight:700}
+.miss{color:var(--warn);font-weight:700}
 .linkbtn{color:var(--accent);font-weight:700;text-decoration:underline;padding:6px}
 </style>
 </head>
