@@ -68,6 +68,25 @@
       </div>
     </div>
 
+    <div class="card stack">
+      <div class="row between"><h2>Ejercicio</h2><span class="small muted num" id="exTot"></span></div>
+      <div class="grid2">
+        <div class="field"><label for="exA">Actividad</label><select id="exA"></select></div>
+        <div class="field"><label for="exMin">Minutos</label><input id="exMin" type="number" inputmode="numeric" min="1" max="600" placeholder="30"></div>
+      </div>
+      <div class="grid2" id="exCinta">
+        <div class="field"><label for="exVel">Velocidad (km/h)</label><input id="exVel" type="text" inputmode="decimal" placeholder="5"></div>
+        <div class="field"><label for="exInc">Inclinación (%)</label><input id="exInc" type="text" inputmode="decimal" placeholder="0"></div>
+      </div>
+      <div class="field" id="exMet" hidden><label for="exInt">Intensidad</label><select id="exInt"></select></div>
+      <div class="field" id="exKf" hidden><label for="exK">Kcal que marcó tu reloj o la máquina</label><input id="exK" type="number" inputmode="numeric" min="1"></div>
+      <p class="small muted" id="exEst"></p>
+      <button class="btn pri" id="exAdd">Registrar ejercicio</button>
+      <div class="examples" id="exSug"></div>
+      <div class="pan" id="exList"></div>
+      <div id="exWeek"></div>
+    </div>
+
     <div class="stack" id="meals"></div>
   </section>
 
@@ -152,6 +171,12 @@
       <button class="btn pri" id="perfSave">Guardar perfil</button>
     </div>
     <div class="card stack">
+      <h2>Ejercicio</h2>
+      <label class="row" for="cfgEjSuma"><input type="checkbox" id="cfgEjSuma" style="width:22px;height:22px"> <span>Sumar lo que quemo con ejercicio a la meta de calorías del día</span></label>
+      <p class="small muted">Si quieres bajar de peso, déjalo apagado. El ejercicio aumenta el déficit y lo acelera, y tu meta ya considera tu actividad diaria. Si quieres subir o mantener, enciéndelo para comer lo que gastaste.</p>
+      <div class="field"><label for="cfgEjMeta">Meta semanal</label><select id="cfgEjMeta"><option value="150">150 minutos</option><option value="200">200 minutos</option><option value="250">250 minutos</option><option value="300">300 minutos</option></select></div>
+    </div>
+    <div class="card stack">
       <h2>PIN</h2>
       <div class="grid2">
         <div class="field"><label for="pOld">PIN actual</label><input id="pOld" type="password" inputmode="numeric" maxlength="8"></div>
@@ -186,6 +211,7 @@
         <p><b>Proteína.</b> 1,6 a 2,2 g por kilo de peso al día cuando la idea es ganar masa. Por defecto uso 1,8 g/kg.</p>
         <p><b>Grasas y carbohidratos.</b> Grasas al 28% de las calorías y el resto, carbohidratos.</p>
         <p><b>Balance.</b> Guías Alimentarias para la Población Chilena (Ministerio de Salud, 2013): 5 porciones de verduras y frutas de distintos colores cada día, 3 porciones de lácteos bajos en grasa, legumbres al menos 2 veces por semana, pescado al menos 2 veces por semana y 6 a 8 vasos de agua.</p>
+        <p><b>Ejercicio.</b> La caminadora se calcula con las ecuaciones metabólicas del American College of Sports Medicine (ACSM), según velocidad, inclinación y tu peso. Las demás actividades usan los METs del Compendio de Actividades Físicas (2011). La meta semanal sigue las Directrices de la OMS sobre actividad física (2020), que recomiendan entre 150 y 300 minutos semanales de actividad moderada, y las Guías Alimentarias, que piden actividad física diaria. Las kcal son estimadas y la pantalla de la máquina puede marcar hasta un 20% más o menos.</p>
         <p><b>Fibra.</b> 14 g por cada 1.000 kcal, con un mínimo de 25 g.</p>
         <p><b>Etiquetas.</b> Para productos envasados, revisa la tabla nutricional que exige el Reglamento Sanitario de los Alimentos (DS 977/96) y los sellos "ALTO EN" de la Ley 20.606 y su reglamento (DS 13/2015). Entre dos productos parecidos, prefiere el que tiene menos sellos.</p>
         <p><b>Cómo calcula.</b> Todo se calcula dentro del teléfono, sin internet. Los valores son aproximados por porción típica y sirven para orientarte. No reemplazan la indicación de un nutricionista.</p>

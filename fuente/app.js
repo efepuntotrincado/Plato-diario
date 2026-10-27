@@ -1,5 +1,5 @@
 /* ====================== ESTADO (solo en este teléfono) ====================== */
-const VERSION="2.1.0";
+const VERSION="2.2.0";
 const LS="plato-diario-v1";
 const MEALS=[["desayuno","Desayuno"],["colacion","Colación"],["almuerzo","Almuerzo"],["once","Once"],["cena","Cena"]];
 const MEAL_ORDER=MEALS.map(m=>m[0]);
@@ -44,6 +44,9 @@ function metas(p){
   const c=Math.max(0,Math.round((kcal-prot*4-g*9)/4));
   return {kcal,prot,g,c,fi:Math.max(25,Math.round(kcal*0.014)),v:3,fr:2,l:3,agua:8,tmb:Math.round(tmb),get:Math.round(get),peso};
 }
+function metaCalcTxt(p){ const M=metas(p); if(p.metaKcal>0) return `Meta fijada a mano: ${fk(M.kcal)} kcal al día.`;
+  const op=p.obj==="subir"?"+":p.obj==="bajar"?"−":""; return op?`Meta: ${fk(M.get)} ${op} ${p.sup} = ${fk(M.kcal)} kcal al día`:`Meta: mantener tu gasto, ${fk(M.kcal)} kcal al día`; }
+function metasFor(k){ const M=metas(); const ex=exTot(k); M.ex=ex; if(S.cfg.ejSuma&&ex.net>0){ M.kcal+=Math.round(ex.net); M.c+=Math.round(ex.net/4); M.exAdd=Math.round(ex.net); } return M; }
 function tot(items){const t={k:0,p:0,c:0,g:0,fi:0,v:0,fr:0,l:0,leg:0,pes:0};
   items.forEach(it=>{FIELDS.forEach(k=>t[k]+=(it.b[k]||0)*it.f); if(it.leg)t.leg=1; if(it.pes)t.pes=1;});return t}
 function weekCount(flag,k){
@@ -112,7 +115,7 @@ function perfilFields(p,pre){
       <option value="subir"${p.obj==="subir"?" selected":""}>Subir de peso</option>
       <option value="mantener"${p.obj==="mantener"?" selected":""}>Mantener</option>
       <option value="bajar"${p.obj==="bajar"?" selected":""}>Bajar de peso</option></select></div>
-    <div class="field"><label for="${pre}sup">Kcal a sumar o restar</label><select id="${pre}sup">${[250,300,400,500].map(v=>`<option value="${v}"${+p.sup===v?" selected":""}>${v}</option>`).join("")}</select></div>
+    <div class="field" id="${pre}supF"${p.obj==="mantener"?" hidden":""}><label for="${pre}sup" id="${pre}supL">${p.obj==="subir"?"Kcal a sumar":"Kcal a restar"}</label><select id="${pre}sup">${[250,300,400,500].map(v=>`<option value="${v}"${+p.sup===v?" selected":""}>${p.obj==="subir"?"+":"−"}${v} kcal</option>`).join("")}</select></div>
   </div>
   <div class="field"><label for="${pre}prot">Proteína por kilo</label><select id="${pre}prot">${[1.2,1.4,1.6,1.8,2.0,2.2].map(v=>`<option value="${v}"${+p.protKg===v?" selected":""}>${nf1.format(v)} g/kg</option>`).join("")}</select></div>`;
 }
@@ -125,7 +128,9 @@ function readPerfil(pre,old){
   if(!(p.peso>=30&&p.peso<=250)) return "El peso va en kilos, por ejemplo 60.";
   return p;
 }
-function renderSetup(){ if(!$("sedad")) $("setupForm").innerHTML=perfilFields(null,"s"); }
+function syncSup(pre){ const o=$(pre+"obj"); if(!o) return; const obj=o.value; $(pre+"supF").hidden=obj==="mantener"; $(pre+"supL").textContent=obj==="subir"?"Kcal a sumar":"Kcal a restar";
+  [...$(pre+"sup").options].forEach(op=>op.textContent=(obj==="subir"?"+":"−")+op.value+" kcal"); }
+function renderSetup(){ if(!$("sedad")){ $("setupForm").innerHTML=perfilFields(null,"s"); $("sobj").onchange=()=>syncSup("s"); } }
 
 function bar(label,val,goal,color,unit){
   const pct=goal>0?Math.min(100,val/goal*100):0;
@@ -133,20 +138,20 @@ function bar(label,val,goal,color,unit){
     <div class="track"><div class="fill" style="width:${pct}%;background:${color}"></div></div></div>`;
 }
 function renderHoy(){
-  const M=metas(), d=day(CUR), T=tot(d.items);
+  const M=metasFor(CUR), d=day(CUR), T=tot(d.items);
   $("installTip").hidden=!showInstallTip();
   $("dLbl").textContent=dayLabel(CUR); $("dNext").style.visibility=CUR>=TODAY()?"hidden":"visible";
   const R=64, C=2*Math.PI*R, pct=Math.min(1,T.k/M.kcal), over=T.k-M.kcal;
   $("ring").innerHTML=`<svg viewBox="0 0 150 150" aria-hidden="true"><circle cx="75" cy="75" r="${R}" fill="none" stroke="var(--surface-2)" stroke-width="14"/>
     <circle cx="75" cy="75" r="${R}" fill="none" stroke="${over>0?"var(--warn)":"var(--accent)"}" stroke-width="14" stroke-linecap="round" stroke-dasharray="${C*pct} ${C}"/></svg>
-    <div class="c"><span class="big num">${fk(T.k)}</span><span class="small muted num">de ${fk(M.kcal)} kcal</span>
+    <div class="c"><span class="big num">${fk(T.k)}</span><span class="small muted num">de ${fk(M.kcal)} kcal${M.exAdd?`<br>incluye +${fk(M.exAdd)} de ejercicio`:""}</span>
     <span class="small num" style="font-weight:700;color:${over>0?"var(--warn)":"var(--accent)"}">${over>0?"+"+fk(over)+" sobre la meta":"faltan "+fk(-over)}</span></div>`;
   $("ring").setAttribute("aria-label",`${fk(T.k)} de ${fk(M.kcal)} kilocalorías`);
   $("macros").innerHTML=bar("Proteína",T.p,M.prot,"var(--prot)","g")+bar("Carbos",T.c,M.c,"var(--carb)","g")+bar("Grasas",T.g,M.g,"var(--fat)","g")+bar("Fibra",T.fi,M.fi,"var(--veg)","g");
   const chips=[["Proteína",T.p>=M.prot*0.95,`${fk(T.p)}/${M.prot} g`],["Verduras",T.v>=M.v,`${fp(T.v)}/${M.v}`],["Frutas",T.fr>=M.fr,`${fp(T.fr)}/${M.fr}`],["Lácteos",T.l>=M.l,`${fp(T.l)}/${M.l}`],["Agua",(d.agua||0)>=6,`${d.agua||0}/${M.agua}`]];
   $("balance").innerHTML=chips.map(([n,ok,v])=>`<span class="chip${ok?" ok":""}"><span class="pip" aria-hidden="true"></span>${n} <span class="num">${v}</span>${ok?" ✓":""}</span>`).join("");
   const ms=$("mealSel"); if(!ms.dataset.ready){ ms.innerHTML=MEALS.map(([v,t])=>`<option value="${v}">${t}</option>`).join(""); ms.value=mealNow(); ms.dataset.ready="1"; }
-  renderRecents(); renderPreview(); renderPlan(M,T,d);
+  renderRecents(); renderPreview(); renderPlan(M,T,d); renderEx();
   const a=d.agua||0; $("aguaLbl").textContent=`${a} de 6 a 8 vasos`;
   $("glasses").innerHTML=Array.from({length:Math.max(8,a)},(_,i)=>`<span class="glass${i<a?" on":""}" aria-hidden="true"></span>`).join("");
   const groups=MEAL_ORDER.map(m=>[m,d.items.filter(it=>it.t===m)]);
@@ -334,6 +339,39 @@ function openEdit(id){
     if(b.id==="edel"){ d.items=d.items.filter(x=>x.id!==id); touchDay(CUR); closeSheet(); render(); toast("Eliminado"); } });
 }
 
+/* ---- ejercicio ----
+   Caminadora y caminata: ecuaciones metabólicas del ACSM (caminar hasta 7 km/h, correr sobre 7 km/h).
+   Otras actividades: METs del Compendio de Actividades Físicas (Ainsworth y col., 2011). */
+const ACTS=[["caminadora","Caminadora","cinta",5,3],["caminata","Caminata","cinta",5,0],["trote","Trote o carrera","cinta",8,0],
+  ["bici","Bicicleta (estática o paseo)","met",[3.5,6.8,8.8]],["eliptica","Elíptica","met",[4,5,7]],["natacion","Natación","met",[5.8,7,9.8]],
+  ["futbol","Fútbol","met",[5,7,10]],["baile","Baile","met",[4.5,5.5,7.8]],["pesas","Pesas o máquinas","met",[3.5,5,6]],["yoga","Yoga o elongación","met",[2.5,3,4]],
+  ["escaleras","Subir escaleras","met",[4,6,8.8]],["otro","Otra (escribo las kcal)","kcal"]];
+const INTS=[["suave","Suave"],["moderado","Moderado"],["intenso","Intenso"]];
+function pesoKg(){ return latestPeso()||(S.perfil&&S.perfil.peso)||70; }
+function cintaKpm(vel,inc,kg){ const Sm=vel*1000/60, G=(inc||0)/100; const vo2=vel<=7?0.1*Sm+1.8*Sm*G+3.5:0.2*Sm+0.9*Sm*G+3.5; return vo2*kg/1000*5; }
+function exCalc(e){ const kg=pesoKg(), A=ACTS.find(a=>a[0]===e.a)||ACTS[0]; const rest=3.5*kg/200*e.min;
+  let k; if(A[2]==="cinta") k=cintaKpm(e.vel||A[3],e.inc||0,kg)*e.min; else if(A[2]==="met") k=A[3][Math.max(0,INTS.findIndex(x=>x[0]===e.int))]*3.5*kg/200*e.min; else k=e.kc||0;
+  return {k:Math.round(k),net:Math.max(0,Math.round(A[2]==="kcal"?k:k-rest))}; }
+function exTot(k){ const L=(S.dias[k]&&S.dias[k].ej)||[]; return L.reduce((a,e)=>({k:a.k+(e.k||0),net:a.net+(e.net||0),min:a.min+(e.min||0)}),{k:0,net:0,min:0}); }
+function weekEx(k){ k=k||TODAY(); const d=fromKey(k), dow=(d.getDay()+6)%7; let r={k:0,min:0,ses:0}; for(let i=0;i<=dow;i++){ const kk=addDays(k,-i); const L=(S.dias[kk]&&S.dias[kk].ej)||[]; L.forEach(e=>{ r.k+=e.k||0; r.min+=e.min||0; r.ses++; }); } return r; }
+function exForm(){ const a=$("exA").value, A=ACTS.find(x=>x[0]===a); return {a,min:+$("exMin").value||0,vel:+String($("exVel").value).replace(",",".")||A[3]||0,inc:+String($("exInc").value).replace(",",".")||0,int:$("exInt").value,kc:+$("exK").value||0}; }
+function exSyncForm(){ const A=ACTS.find(x=>x[0]===$("exA").value); $("exCinta").hidden=A[2]!=="cinta"; $("exMet").hidden=A[2]!=="met"; $("exKf").hidden=A[2]!=="kcal";
+  if(A[2]==="cinta"&&!$("exVel").dataset.touched){ $("exVel").value=String(A[3]).replace(".",","); $("exInc").value=A[4]; }
+  const e=exForm(); const c=e.min>0?exCalc(e):null; $("exEst").textContent=c?`≈ ${fk(c.k)} kcal en total (${fk(c.net)} sobre tu gasto en reposo)`:"Escribe los minutos para ver cuánto quemas."; }
+function exSuggest(){ const kg=pesoKg(); const target=250; const opts=[[5,3],[5,5],[5.5,5],[4.5,8]];
+  return opts.map(([v,i])=>{ const kpm=cintaKpm(v,i,kg); const min=Math.max(15,Math.min(60,Math.round(target/kpm/5)*5)); return {v,i,min,k:Math.round(kpm*min)}; }); }
+function renderEx(){
+  const L=(day(CUR).ej)||[], T=exTot(CUR), W=weekEx(CUR), goal=S.cfg.ejMeta||150;
+  $("exTot").textContent=L.length?`${fk(T.k)} kcal · ${T.min} min`:"";
+  $("exList").innerHTML=L.map(e=>{ const A=ACTS.find(a=>a[0]===e.a)||ACTS[0]; return `<div class="prow"><span class="small num" style="font-weight:700">${e.min} min</span>
+    <span class="nm">${esc(A[1])}<span class="small muted" style="font-weight:400">${A[2]==="cinta"?` · ${nf1.format(e.vel)} km/h${e.inc?`, ${nf1.format(e.inc)}%`:""}`:A[2]==="met"?` · ${(INTS.find(x=>x[0]===e.int)||INTS[1])[1].toLowerCase()}`:""} · ${fk(e.k)} kcal</span></span>
+    <button class="xbtn" data-exx="${e.id}" aria-label="Quitar sesión">×</button></div>`; }).join("");
+  const pct=Math.min(100,W.min/goal*100);
+  $("exWeek").innerHTML=`<div class="bar"><div class="t"><b>Esta semana</b><span class="num">${W.min} / ${goal} min</span></div><div class="track"><div class="fill" style="width:${pct}%;background:var(--water)"></div></div></div>`;
+  if(!$("exA").dataset.ready){ $("exA").innerHTML=ACTS.map(a=>`<option value="${a[0]}">${a[1]}</option>`).join(""); $("exInt").innerHTML=INTS.map(x=>`<option value="${x[0]}"${x[0]==="moderado"?" selected":""}>${x[1]}</option>`).join(""); $("exA").dataset.ready="1"; exSyncForm(); }
+  $("exSug").innerHTML=`<span class="label" style="width:100%">Caminadora para quemar unas 250 kcal</span>`+exSuggest().map((o,i)=>`<button class="chip btnchip" data-exs="${i}">${o.min} min · ${nf1.format(o.v)} km/h · ${o.i}%</button>`).join("");
+}
+
 /* ---- despensa, compras y menú ---- */
 let DSEG="tengo";
 const LOCS=[["refri","Refrigerador"],["congelador","Congelador"],["despensa","Despensa"]];
@@ -429,7 +467,7 @@ function renderHist(){
   const reg=days.filter(x=>x.n);
   const avgK=reg.length?reg.reduce((a,x)=>a+x.T.k,0)/reg.length:0, avgP=reg.length?reg.reduce((a,x)=>a+x.T.p,0)/reg.length:0;
   const protOk=reg.filter(x=>x.T.p>=M.prot*0.95).length, vegOk=reg.filter(x=>x.T.v>=M.v).length;
-  $("weekStats").innerHTML=[["Promedio diario",fk(avgK)+" kcal",`meta ${fk(M.kcal)}`],["Proteína promedio",fk(avgP)+" g",`meta ${M.prot} g`],["Días con proteína",protOk+" de "+reg.length,"de los días registrados"],["Días con verduras",vegOk+" de "+reg.length,`al menos ${M.v} porciones`]]
+  $("weekStats").innerHTML=[["Promedio diario",fk(avgK)+" kcal",`meta ${fk(M.kcal)}`],["Proteína promedio",fk(avgP)+" g",`meta ${M.prot} g`],["Días con proteína",protOk+" de "+reg.length,"de los días registrados"],["Días con verduras",vegOk+" de "+reg.length,`al menos ${M.v} porciones`],["Ejercicio esta semana",weekEx().min+" min",`meta ${S.cfg.ejMeta||150} min`],["Quemado esta semana",fk(weekEx().k)+" kcal",`${weekEx().ses} ${weekEx().ses===1?"sesión":"sesiones"}`]]
     .map(([a,b,c])=>`<div class="stat"><span class="label">${a}</span><span class="v num">${b}</span><span class="small muted">${c}</span></div>`).join("");
   const P=(S.pesos||[]).slice().sort((a,b)=>a.f<b.f?-1:1).slice(-30);
   const dshort=k=>fromKey(k).toLocaleDateString("es-CL",{day:"numeric",month:"short"});
@@ -479,9 +517,10 @@ function renderAlim(){
 
 /* ---- ajustes ---- */
 function renderAjus(){
-  if(!$("aedad")){ $("perfForm").innerHTML=perfilFields(S.perfil,"a"); $("aNombre").value=S.perfil.nombre||""; }
+  if(!$("aedad")){ $("perfForm").innerHTML=perfilFields(S.perfil,"a"); $("aNombre").value=S.perfil.nombre||"";
+    $("perfForm").oninput=$("perfForm").onchange=()=>{ syncSup("a"); const p=readPerfil("a",S.perfil); $("metaCalc").textContent=typeof p==="string"?p:metaCalcTxt(Object.assign({},p,{metaKcal:0})); }; }
   const M=metas();
-  $("metaBox").innerHTML=`<div class="grid2">
+  $("metaBox").innerHTML=`<p class="small num" id="metaCalc" style="font-weight:700">${metaCalcTxt(S.perfil)}</p><div class="grid2">
       <div class="stat"><span class="label">Gasto en reposo</span><span class="v num">${fk(M.tmb)}</span><span class="small muted">kcal al día</span></div>
       <div class="stat"><span class="label">Gasto con actividad</span><span class="v num">${fk(M.get)}</span><span class="small muted">kcal al día</span></div>
       <div class="stat"><span class="label">Meta de calorías</span><span class="v num">${fk(M.kcal)}</span><span class="small muted">${S.perfil.metaKcal>0?"fijada a mano":"calculada"}</span></div>
@@ -493,6 +532,7 @@ function renderAjus(){
         <div class="field"><label for="aMk">Calorías (vacío = calcular)</label><input id="aMk" type="number" inputmode="numeric" value="${S.perfil.metaKcal>0?S.perfil.metaKcal:""}"></div>
         <div class="field"><label for="aMp">Proteína g (vacío = calcular)</label><input id="aMp" type="number" inputmode="numeric" value="${S.perfil.metaProt>0?S.perfil.metaProt:""}"></div>
       </div></details>`;
+  $("cfgEjSuma").checked=!!S.cfg.ejSuma; $("cfgEjMeta").value=String(S.cfg.ejMeta||150);
   $("bkLast").textContent=S.bkLast?`Último respaldo: ${new Date(S.bkLast).toLocaleDateString("es-CL",{day:"numeric",month:"long"})}.`:"Todavía no haces un respaldo.";
   $("appUrl").textContent=location.origin+location.pathname.replace(/index\.html$/,"");
   $("verLbl").textContent="Plato Diario "+VERSION;
@@ -622,6 +662,18 @@ $("cClear").onclick=()=>{ const n=S.compras.filter(c=>c.done).length; S.compras=
 $("mStrict").onchange=e=>{ S.cfg.soloDesp=e.target.checked; touchPerfil(); };
 $("mGo").onclick=buildMenu;
 $("mShop").onclick=menuToShop;
+
+$("exA").onchange=()=>{ $("exVel").dataset.touched=""; exSyncForm(); };
+["exMin","exVel","exInc","exInt","exK"].forEach(id=>$(id).addEventListener("input",()=>{ if(id==="exVel"||id==="exInc") $("exVel").dataset.touched="1"; exSyncForm(); }));
+$("exInt").onchange=exSyncForm;
+$("exAdd").onclick=()=>{ const e=exForm(); if(!(e.min>0)){ toast("Escribe cuántos minutos hiciste"); return; } const A=ACTS.find(x=>x[0]===e.a);
+  if(A[2]==="kcal"&&!(e.kc>0)){ toast("Escribe las kcal que marcó tu reloj o la máquina"); return; }
+  const c=exCalc(e); const d=ensureDay(CUR); d.ej=d.ej||[]; d.ej.push({id:uid(),a:e.a,min:e.min,vel:A[2]==="cinta"?e.vel:0,inc:A[2]==="cinta"?e.inc:0,int:e.int,kc:e.kc,k:c.k,net:c.net,ts:Date.now()});
+  touchDay(CUR); $("exMin").value=""; renderHoy(); toast(`Ejercicio registrado: ${fk(c.k)} kcal`); };
+$("exList").onclick=e=>{ const b=e.target.closest("[data-exx]"); if(!b) return; const d=ensureDay(CUR); d.ej=(d.ej||[]).filter(x=>x.id!==b.dataset.exx); touchDay(CUR); renderHoy(); };
+$("exSug").onclick=e=>{ const b=e.target.closest("[data-exs]"); if(!b) return; const o=exSuggest()[+b.dataset.exs]; $("exA").value="caminadora"; $("exMin").value=o.min; $("exVel").value=String(o.v).replace(".",","); $("exInc").value=o.i; $("exVel").dataset.touched="1"; exSyncForm(); $("exAdd").scrollIntoView({behavior:"smooth",block:"center"}); };
+$("cfgEjSuma").onchange=e=>{ S.cfg.ejSuma=e.target.checked; touchPerfil(); };
+$("cfgEjMeta").onchange=e=>{ S.cfg.ejMeta=+e.target.value; touchPerfil(); };
 
 /* ====================== ARRANQUE ====================== */
 render.lastDay=TODAY();
