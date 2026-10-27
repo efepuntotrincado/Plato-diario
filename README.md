@@ -4,6 +4,6 @@ Registro diario de comidas, calorías y proteína para iPhone, con balance segú
 
 Todo se calcula dentro del teléfono y funciona sin internet. Los datos quedan solo en cada teléfono, protegidos con PIN.
 
-**Instalar:** abrir https://efepuntotrincado.github.io/plato-diario/ en Safari → Compartir → Añadir a pantalla de inicio.
+**Instalar:** abrir https://efepuntotrincado.github.io/Plato-diario/ en Safari → Compartir → Añadir a pantalla de inicio.
 
 La carpeta `fuente/` tiene las partes con que se arma `index.html` (`python3 build.py`).
